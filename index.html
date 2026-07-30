@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0e14"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg">
+<title>ロトの目 β0.5｜数字カルテ</title>
+<style>
+:root{--bg:#080a0f;--panel:#121722;--line:#2a3346;--text:#f4f6fb;--muted:#98a3b8;--accent:#d9ff43;--blue:#6aa9ff;--gold:#ffd55c;--violet:#a98bff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% -10%,#1d2432 0,#080a0f 45%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:920px;margin:auto;padding:calc(env(safe-area-inset-top) + 18px) 14px calc(env(safe-area-inset-bottom) + 35px)}
+header{padding:10px 3px 18px}.eyebrow{font-size:11px;letter-spacing:.23em;color:var(--accent);font-weight:900}.title{font-size:31px;font-weight:950;letter-spacing:-.045em;margin:4px 0}.subtitle,.notice,.mini{color:var(--muted);font-size:12px;line-height:1.65}
+.card{background:linear-gradient(145deg,#181e2a,#10141d);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+button,input,select,textarea{font:inherit}button{border:1px solid var(--line);background:#222a38;color:var(--text);border-radius:13px;padding:12px;font-weight:850}.activeGame,.primary{background:var(--accent)!important;color:#111500!important;border-color:var(--accent)!important}
+.tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;position:sticky;top:0;z-index:8;padding:8px 0;background:rgba(8,10,15,.88);backdrop-filter:blur(14px)}.tab{font-size:12px;padding:10px 2px}.tab.active{background:var(--accent);color:#111500}
+section{display:none}.show{display:block}h2{font-size:17px;margin:0 0 12px}h3{font-size:14px;margin:14px 0 7px}
+label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}select,input,textarea{width:100%;background:#090c12;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:16px}textarea{min-height:125px;font-family:ui-monospace,monospace;font-size:12px}
+.switchline{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:10px 0}.switchline input{width:22px;height:22px}
+.balls{display:flex;flex-wrap:wrap;gap:8px}.ball{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#f3f6fa;color:#0a0d12;font-weight:950;box-shadow:inset 0 -5px 9px #bcc5d1}.hot{outline:3px solid var(--accent)}.cold{outline:3px solid var(--blue)}
+.ticket{padding:13px 0;border-bottom:1px solid var(--line)}.ticket:last-child{border:0}.ticketHead{display:flex;justify-content:space-between;margin-bottom:8px}.score{color:var(--accent);font-weight:900}
+.stat{background:#0b0e14;border:1px solid var(--line);border-radius:13px;padding:11px}.stat b{display:block;font-size:20px}.stat span{font-size:11px;color:var(--muted)}
+.barrow,.scoreRow{display:grid;grid-template-columns:30px 1fr 42px;gap:8px;align-items:center;margin:7px 0;font-size:12px}.bar{height:8px;background:#262e3d;border-radius:9px;overflow:hidden}.fill{height:100%;background:var(--accent)}
+.riverWrap{overflow:auto;border:1px solid var(--line);border-radius:13px;background:#090c12}.riverGrid{display:grid;font-size:10px}.cell{height:24px;display:grid;place-items:center;border-right:1px solid #1c2230;border-bottom:1px solid #1c2230;color:#667187}.head{position:sticky;top:0;background:#171c27;color:#cbd3e2;font-weight:800;z-index:2}.round{position:sticky;left:0;background:#11151e;color:#aeb8ca;font-weight:800;z-index:1}.hit{width:17px;height:17px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#111500;font-weight:950}.bonus{width:17px;height:17px;border-radius:50%;outline:2px solid #ff9f43;color:#ffbd73;display:grid;place-items:center}
+.metric{margin:12px 0}.metricHead{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px}.clickable{cursor:pointer;transition:transform .15s}.clickable:active{transform:scale(.92)}.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;place-items:center;padding:18px;z-index:50}.modal.showModal{display:grid}.modalCard{width:min(520px,100%);max-height:85vh;overflow:auto;background:#121722;border:1px solid var(--line);border-radius:20px;padding:18px}.closeBtn{float:right;padding:8px 12px}.hidden{display:none}.danger{background:#3b1f28;color:#ffb9c2}.ok{color:#57dfa8}
+.eyeHero{display:grid;grid-template-columns:132px 1fr;gap:16px;align-items:center;margin:15px 0}.scoreRing{--p:0;width:132px;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--accent) calc(var(--p)*1%),#252d3a 0);position:relative;box-shadow:0 0 34px rgba(217,255,67,.12)}.scoreRing:before{content:"";position:absolute;inset:10px;border-radius:50%;background:#10151f;border:1px solid #354057}.scoreRingInner{position:relative;text-align:center}.scoreRingInner b{font-size:34px;line-height:1}.scoreRingInner span{display:block;color:var(--muted);font-size:10px;margin-top:4px}.heroCopy h3{font-size:21px;margin:0 0 6px}.heroCopy p{margin:0}.focusGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:14px 0}.focusCard{background:#0b0f16;border:1px solid var(--line);border-radius:15px;padding:10px 4px;text-align:center}.focusCard:first-child{border-color:var(--accent);box-shadow:0 0 20px rgba(217,255,67,.1)}.focusRank{font-size:10px;color:var(--muted)}.focusNum{font-size:24px;font-weight:950;margin:3px 0}.focusScore{font-size:11px;color:var(--accent);font-weight:900}.trendChips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.chip{border:1px solid var(--line);background:#0b0f16;border-radius:999px;padding:7px 10px;font-size:11px}.chip strong{color:var(--accent)}.sectionTitleRow{display:flex;justify-content:space-between;align-items:center;gap:10px}.sectionTitleRow select{width:auto;min-width:130px;padding:8px;font-size:12px}.rankBadge{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:#252e3d;font-weight:950}.rankBadge.top1{background:var(--gold);color:#1a1400}.rankBadge.top2{background:#d7deea;color:#111827}.rankBadge.top3{background:#c98955;color:#1b0e05}.scoreRow.pro{grid-template-columns:34px 1fr 48px;padding:8px;border-radius:12px}.scoreRow.pro:hover{background:#171e2a}.versionPill{display:inline-flex;align-items:center;gap:6px;background:rgba(217,255,67,.08);border:1px solid rgba(217,255,67,.35);border-radius:999px;padding:5px 9px;color:var(--accent);font-size:10px;font-weight:900}
+
+.profileHero{display:grid;grid-template-columns:92px 1fr;gap:14px;align-items:center;margin:12px 0 16px}.profileBall{width:88px;height:88px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#fff,#cad3df);color:#080b10;font-size:34px;font-weight:950;box-shadow:inset 0 -10px 16px #aeb8c6,0 0 28px rgba(217,255,67,.12)}.profileTitle{font-size:25px;margin:0 0 4px}.favBtn{width:100%;margin:10px 0;background:#222a38}.favBtn.on{background:#ffd55c;color:#191300;border-color:#ffd55c}.breakdown{background:#090c12;border:1px solid var(--line);border-radius:15px;padding:12px;margin:12px 0}.breakRow{display:grid;grid-template-columns:82px 1fr 42px;gap:8px;align-items:center;margin:9px 0;font-size:12px}.breakRow strong{text-align:right;color:var(--accent)}.periodGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.periodBox{background:#090c12;border:1px solid var(--line);border-radius:13px;padding:10px 5px;text-align:center}.periodBox b{display:block;font-size:17px}.periodBox span{font-size:10px;color:var(--muted)}.pairBall{position:relative}.pairCount{position:absolute;right:-4px;top:-5px;background:var(--violet);color:white;border-radius:999px;padding:2px 5px;font-size:9px;box-shadow:none}.favoriteStrip{display:flex;gap:8px;overflow:auto;padding:2px 0 8px}.favoriteItem{min-width:58px;background:#0b0f16;border:1px solid #6d5d24;border-radius:14px;padding:9px;text-align:center}.favoriteItem b{font-size:20px;color:var(--gold)}.emptyFavorite{border:1px dashed var(--line);border-radius:13px;padding:12px;color:var(--muted);font-size:12px}.aiNote{border-left:3px solid var(--accent);padding:10px 12px;background:#0b0f16;border-radius:0 12px 12px 0;line-height:1.7;font-size:12px}.miniChart{display:flex;align-items:flex-end;gap:6px;height:92px;margin:10px 0 4px;padding-top:8px}.miniChartCol{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}.miniChartBar{width:100%;max-width:48px;min-height:3px;background:linear-gradient(180deg,var(--accent),#7e9826);border-radius:7px 7px 2px 2px}.miniChartCol small{font-size:9px;color:var(--muted);margin-top:5px}.modalCard{width:min(570px,100%)}
+@media(max-width:520px){.eyeHero{grid-template-columns:108px 1fr}.scoreRing{width:108px}.focusGrid{grid-template-columns:repeat(5,minmax(54px,1fr));overflow-x:auto}.focusNum{font-size:20px}}@media(min-width:720px){.desktop2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.title{font-size:38px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<div class="eyebrow">LOTTERY PATTERN ANALYSIS</div>
+<div class="title">ロトの目</div>
+<div class="subtitle">数字の流れを観察し、3つの分析タイプで候補を組み立てる。</div>
+</header>
+
+<div class="card" style="border-color:#53617a">
+  <div class="notice"><b style="color:#f4f6fb">β0.5｜数字カルテ本格版</b><br>
+  スコア内訳・期間別出現グラフ・相性数字・お気に入り保存を追加。数字を押すと分析根拠がひと目で分かります。
+  </div>
+</div>
+
+
+<div class="card">
+<div class="eyebrow" style="margin-bottom:8px">GAME SELECT</div>
+<div class="grid3" id="gameSelector">
+<button class="gameBtn activeGame" data-game="loto6">ロト6</button>
+<button class="gameBtn" data-game="loto7">ロト7</button>
+<button class="gameBtn" data-game="miniloto">ミニロト</button>
+</div>
+<div id="gameMeta" class="notice" style="margin-top:10px"></div>
+</div>
+
+<nav class="tabs">
+<button class="tab active" data-tab="eye">ロトの目</button>
+<button class="tab" data-tab="predict">予想</button>
+<button class="tab" data-tab="analysis">分析</button>
+<button class="tab" data-tab="river">川</button>
+<button class="tab" data-tab="data">データ</button>
+<button class="tab" data-tab="history">履歴</button>
+</nav>
+
+<section id="eye" class="show">
+<div class="card" style="border-color:#526433">
+<div class="eyebrow">WEEKLY FOCUS</div>
+<h2 style="font-size:22px;margin-top:6px">👁 今回のロトの目</h2>
+<div class="sectionTitleRow"><div id="eyeStatus" class="notice"></div><select id="eyeWindow"><option value="10">直近10回</option><option value="30" selected>直近30回</option><option value="100">直近100回</option><option value="0">全期間</option></select></div>
+<div class="eyeHero"><div id="eyeScoreRing" class="scoreRing"><div class="scoreRingInner"><b id="eyeScoreValue">--</b><span>総合注目度</span></div></div><div class="heroCopy"><span class="versionPill">LIVE ANALYSIS β0.5</span><h3 id="eyeHeadline">データ待機中</h3><p id="eyeHeroText" class="notice">当選データを読み込むと分析が始まります。</p><div id="eyeChips" class="trendChips"></div></div></div>
+<div id="eyeTop" class="focusGrid"></div>
+<div id="eyeComment" class="stat"></div><div id="eyeMetrics" class="card" style="margin:12px 0 0"></div>
+<button id="eyeGenerateBtn" class="primary" style="width:100%;margin-top:14px">3タイプAIを生成</button>
+</div>
+<div id="threeAiOutput" class="card hidden"></div>
+<div class="card"><div class="sectionTitleRow"><h2>⭐ お気に入り数字</h2><span class="mini">最大8個</span></div><div id="favoriteNumbers"></div></div>
+<div class="card"><h2>注目数字ランキング</h2><div id="eyeRanking"></div></div>
+</section>
+
+<section id="predict">
+<div class="card">
+<h2>予想設定</h2>
+<div class="grid2">
+<div><label>口数</label><select id="ticketCount"><option>1</option><option selected>5</option><option>10</option></select></div>
+<div><label>分析対象</label><select id="windowSize"><option value="0">全期間</option><option value="100" selected>直近100回</option><option value="50">直近50回</option></select></div>
+</div>
+<label>予想スタイル</label>
+<select id="style"><option value="balanced">バランス型</option><option value="hot">ホット重視</option><option value="cold">空き重視</option><option value="river">川の法則重視</option><option value="total">総合分析</option></select>
+<h3>分析ルール</h3>
+<div id="ruleSwitches"></div>
+<button id="generateBtn" class="primary" style="width:100%;margin-top:14px">予想を生成</button>
+</div>
+<div id="predictionOutput" class="card hidden"></div>
+</section>
+
+<section id="analysis">
+<div class="card"><h2>分析期間</h2><select id="analysisWindow"><option value="10">直近10回</option><option value="30" selected>直近30回</option><option value="100">直近100回</option><option value="0">全期間</option></select></div><div class="card"><h2>データ概要</h2><div class="grid3">
+<div class="stat"><b id="drawCount">0</b><span>登録回数</span></div>
+<div class="stat"><b id="lastDraw">-</b><span>最新回</span></div>
+<div class="stat"><b id="avgSum">-</b><span>平均合計</span></div>
+</div></div>
+<div class="desktop2">
+<div class="card"><h2>ホット数字</h2><div id="hotBalls" class="balls"></div></div>
+<div class="card"><h2>空き数字</h2><div id="coldBalls" class="balls"></div></div>
+</div>
+<div class="card"><h2 id="freqTitle">出現回数</h2><div id="frequencyBars"></div></div>
+<div class="card"><h2>傾向</h2><div id="trendText" class="notice"></div></div>
+</section>
+
+<section id="river">
+<div class="card">
+<h2>数字の川チャート</h2>
+<label>表示回数</label><select id="riverWindow"><option value="10">直近10回</option><option value="20" selected>直近20回</option><option value="30">直近30回</option></select>
+<div id="riverSummary" class="notice" style="margin:12px 0"></div>
+<div id="riverChart" class="riverWrap"></div>
+</div>
+<div class="card"><h2>川スコア上位</h2><div id="riverRanking"></div></div>
+</section>
+
+<section id="data">
+<div class="card">
+<h2>当選データを読み込む</h2>
+<p class="notice">現在選択中のゲーム形式でCSVを読み込む。サンプルは動作確認用。</p>
+<input id="csvFile" type="file" accept=".csv,text/csv">
+<label>またはCSV貼り付け</label><textarea id="csvText"></textarea>
+<div class="grid2"><button id="importTextBtn" class="primary">貼付データを読込</button><button id="loadSampleBtn">サンプルを読込</button></div>
+<div id="dataMessage" class="notice" style="margin-top:10px"></div>
+</div>
+<div class="card">
+<h2>手入力</h2>
+<div class="grid2"><div><label>回号</label><input id="manualRound" inputmode="numeric"></div><div><label>日付</label><input id="manualDate" type="date"></div></div>
+<label>本数字</label><input id="manualNums" inputmode="numeric">
+<label>ボーナス数字</label><input id="manualBonus" inputmode="numeric">
+<button id="manualAddBtn" class="primary" style="width:100%;margin-top:12px">1回分を追加</button>
+</div>
+<div class="card"><div class="grid2"><button id="exportBtn">CSVを書き出す</button><button id="clearBtn" class="danger">全データ削除</button></div></div>
+</section>
+
+<section id="history">
+<div class="card"><h2>予想履歴</h2><div id="historyList"></div><button id="clearHistoryBtn" class="danger" style="width:100%;margin-top:12px">履歴を削除</button></div>
+</section>
+
+<div class="card"><p class="notice">本アプリは娯楽・統計観察用です。抽選はランダムであり、分析スコアや過去傾向は当選確率の上昇・当選を保証しません。無理のない範囲でお楽しみください。</p></div>
+</main><div id="numberModal" class="modal"><div class="modalCard"><button id="closeModal" class="closeBtn">閉じる</button><div id="numberCardBody"></div></div></div>
+<script>const $=id=>document.getElementById(id);
+const gameMeta=$('gameMeta');
+const manualNums=$('manualNums');
+const manualBonus=$('manualBonus');
+const ruleSwitches=$('ruleSwitches');
+const importTextBtn=$('importTextBtn');
+const csvText=$('csvText');
+const loadSampleBtn=$('loadSampleBtn');
+const csvFile=$('csvFile');
+const manualAddBtn=$('manualAddBtn');
+const manualRound=$('manualRound');
+const manualDate=$('manualDate');
+const dataMessage=$('dataMessage');
+const clearBtn=$('clearBtn');
+const exportBtn=$('exportBtn');
+const windowSize=$('windowSize');
+const drawCount=$('drawCount');
+const lastDraw=$('lastDraw');
+const avgSum=$('avgSum');
+const hotBalls=$('hotBalls');
+const coldBalls=$('coldBalls');
+const freqTitle=$('freqTitle');
+const frequencyBars=$('frequencyBars');
+const trendText=$('trendText');
+const riverWindow=$('riverWindow');
+const riverChart=$('riverChart');
+const riverRanking=$('riverRanking');
+const riverSummary=$('riverSummary');
+const generateBtn=$('generateBtn');
+const ticketCount=$('ticketCount');
+const style=$('style');
+const predictionOutput=$('predictionOutput');
+const historyList=$('historyList');
+const clearHistoryBtn=$('clearHistoryBtn');
+const eyeStatus=$('eyeStatus');
+const eyeTop=$('eyeTop');
+const eyeComment=$('eyeComment');
+const eyeRanking=$('eyeRanking');
+const eyeGenerateBtn=$('eyeGenerateBtn');
+const threeAiOutput=$('threeAiOutput');
+const eyeMetrics=$('eyeMetrics');const favoriteNumbers=$('favoriteNumbers');const eyeWindow=$('eyeWindow');const eyeScoreRing=$('eyeScoreRing');const eyeScoreValue=$('eyeScoreValue');const eyeHeadline=$('eyeHeadline');const eyeHeroText=$('eyeHeroText');const eyeChips=$('eyeChips');const analysisWindow=$('analysisWindow');const numberModal=$('numberModal');const closeModal=$('closeModal');const numberCardBody=$('numberCardBody');
+
+
+const memoryStore={};
+const store={
+ get(k){
+  try{const v=localStorage.getItem(k);return v===null?(Object.prototype.hasOwnProperty.call(memoryStore,k)?memoryStore[k]:null):v}catch(e){return Object.prototype.hasOwnProperty.call(memoryStore,k)?memoryStore[k]:null}
+ },
+ set(k,v){
+  memoryStore[k]=String(v);
+  try{localStorage.setItem(k,String(v))}catch(e){}
+ },
+ remove(k){
+  delete memoryStore[k];
+  try{localStorage.removeItem(k)}catch(e){}
+ }
+};
+
+const CONFIG={
+ loto6:{name:'ロト6',max:43,picks:6,bonuses:1,low:21,sum:[110,160],odd:[2,3,4],lowCounts:[2,3,4]},
+ loto7:{name:'ロト7',max:37,picks:7,bonuses:2,low:18,sum:[105,165],odd:[3,4],lowCounts:[3,4]},
+ miniloto:{name:'ミニロト',max:31,picks:5,bonuses:1,low:15,sum:[65,105],odd:[2,3],lowCounts:[2,3]}
+};
+const SAMPLES={
+ loto6:`回,日付,1,2,3,4,5,6,B
+1,2026-01-01,3,8,17,24,35,41,12
+2,2026-01-05,2,11,19,25,33,42,7
+3,2026-01-08,5,9,16,27,31,38,22
+4,2026-01-12,1,14,20,23,36,43,29
+5,2026-01-15,6,12,18,28,34,40,15
+6,2026-01-19,4,7,21,26,32,39,11
+7,2026-01-22,8,13,17,22,30,41,5
+8,2026-01-26,2,10,19,24,35,43,16`,
+ loto7:`回,日付,1,2,3,4,5,6,7,B1,B2
+1,2026-01-02,2,7,11,18,23,29,34,5,31
+2,2026-01-09,1,8,13,17,24,30,36,6,21
+3,2026-01-16,3,9,12,19,25,28,35,4,32
+4,2026-01-23,5,10,14,20,22,31,37,7,26
+5,2026-01-30,2,6,15,18,27,29,33,11,35
+6,2026-02-06,1,8,13,21,24,30,36,4,28`,
+ miniloto:`回,日付,1,2,3,4,5,B
+1,2026-01-06,2,7,13,21,29,16
+2,2026-01-13,1,8,14,20,27,5
+3,2026-01-20,3,9,12,22,31,18
+4,2026-01-27,5,10,15,24,28,7
+5,2026-02-03,2,6,17,23,30,11
+6,2026-02-10,1,8,13,21,27,4`
+};
+const DEFAULT_RULES=[
+{id:'carry',name:'前回・前々回から1個以上',on:true},
+{id:'plus11',name:'±11の数字を1個以上',on:true},
+{id:'sameTail',name:'同じ末尾を1組以上',on:true},
+{id:'multiple5',name:'5の倍数を1個以上',on:true},
+{id:'oddEven',name:'奇数・偶数を適正比率',on:true},
+{id:'lowHigh',name:'低数字・高数字を適正比率',on:true},
+{id:'consecutive',name:'連番は最大1組',on:true},
+{id:'sum',name:'合計値をゲーム別範囲に調整',on:true},
+{id:'river',name:'川スコア上位から2個以上',on:true},
+{id:'pastSet',name:'過去の完全一致セットを除外',on:true}
+];
+let currentGame=store.get('lottery_current_game')||'loto6';
+let draws=[],rules=[];
+const cfg=()=>CONFIG[currentGame];
+const key=x=>`masato_${currentGame}_${x}`;
+function loadGame(){
+ draws=JSON.parse(store.get(key('draws'))||'[]');
+ rules=JSON.parse(store.get(key('rules'))||'null')||DEFAULT_RULES.map(x=>({...x}));
+ document.querySelectorAll('.gameBtn').forEach(b=>b.classList.toggle('activeGame',b.dataset.game===currentGame));
+ gameMeta.innerHTML=`<b>${cfg().name}</b>：1〜${cfg().max}から${cfg().picks}個・ボーナス${cfg().bonuses}個`;
+ manualNums.placeholder=`本数字${cfg().picks}個を空白区切り`;
+ manualBonus.placeholder=cfg().bonuses===2?'例：5 31':'例：12';
+ renderRules();renderAnalysis();renderRiver();renderHistory();renderEye();
+}
+document.querySelectorAll('.gameBtn').forEach(b=>b.onclick=()=>{currentGame=b.dataset.game;store.set('lottery_current_game',currentGame);loadGame()});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+ document.querySelectorAll('section').forEach(x=>x.classList.remove('show'));
+ b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('show');
+ if(b.dataset.tab==='eye')renderEye();if(b.dataset.tab==='analysis')renderAnalysis();if(b.dataset.tab==='river')renderRiver();if(b.dataset.tab==='history')renderHistory();
+});
+function renderRules(){
+ ruleSwitches.innerHTML='';
+ rules.forEach(r=>{const d=document.createElement('div');d.className='switchline';d.innerHTML=`<span>${r.name}</span><input type="checkbox" ${r.on?'checked':''}>`;d.querySelector('input').onchange=e=>{r.on=e.target.checked;store.set(key('rules'),JSON.stringify(rules))};ruleSwitches.appendChild(d)});
+}
+const enabled=id=>rules.find(r=>r.id===id)?.on;
+function parseCSV(text){
+ const out=[],c=cfg();
+ text.trim().split(/\r?\n/).forEach(line=>{
+  const r=line.split(',').map(x=>x.trim());if(!/^\d+$/.test(r[0]||''))return;
+  const nums=r.slice(2,2+c.picks).map(Number), bonuses=r.slice(2+c.picks,2+c.picks+c.bonuses).map(Number).filter(Boolean);
+  if(nums.length===c.picks&&new Set(nums).size===c.picks&&nums.every(n=>n>=1&&n<=c.max))out.push({round:Number(r[0]),date:r[1],nums:nums.sort((a,b)=>a-b),bonuses});
+ });
+ return out.sort((a,b)=>a.round-b.round);
+}
+function saveDraws(next){
+ const map=new Map(draws.map(d=>[d.round,d]));next.forEach(d=>map.set(d.round,d));draws=[...map.values()].sort((a,b)=>a.round-b.round);
+ store.set(key('draws'),JSON.stringify(draws));dataMessage.innerHTML=`<span class="ok">${next.length}件読み込み・合計${draws.length}件</span>`;renderAnalysis();renderRiver();renderEye();
+}
+importTextBtn.addEventListener('click',()=>saveDraws(parseCSV(csvText.value)));
+loadSampleBtn.addEventListener('click',()=>saveDraws(parseCSV(SAMPLES[currentGame])));
+csvFile.onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>saveDraws(parseCSV(rd.result));rd.readAsText(f,'UTF-8')};
+manualAddBtn.onclick=()=>{
+ const c=cfg(),nums=(manualNums.value.match(/\d+/g)||[]).map(Number),bonuses=(manualBonus.value.match(/\d+/g)||[]).map(Number).slice(0,c.bonuses);
+ if(!manualRound.value||nums.length!==c.picks||new Set(nums).size!==c.picks||nums.some(n=>n<1||n>c.max)){alert(`1〜${c.max}の本数字${c.picks}個を確認してな`);return}
+ saveDraws([{round:Number(manualRound.value),date:manualDate.value,nums:nums.sort((a,b)=>a-b),bonuses}]);
+};
+clearBtn.onclick=()=>{if(confirm(`${cfg().name}のデータを全部削除する？`)){draws=[];store.remove(key('draws'));renderAnalysis();renderRiver();renderEye()}};
+exportBtn.onclick=()=>{
+ const c=cfg(),head=['回','日付',...Array.from({length:c.picks},(_,i)=>`本数字${i+1}`),...Array.from({length:c.bonuses},(_,i)=>`ボーナス${i+1}`)].join(',')+'\n';
+ const body=draws.map(d=>[d.round,d.date,...d.nums,...d.bonuses].join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([head+body],{type:'text/csv'}));a.download=`${currentGame}_data.csv`;a.click();
+};
+function dataset(){const w=Number(windowSize.value||0);return w?draws.slice(-w):draws}
+function analysisDataset(){const w=Number(analysisWindow?.value||30);return w?draws.slice(-w):draws}
+function stats(ds){
+ const freq=Array(cfg().max+1).fill(0),gap=Array(cfg().max+1).fill(ds.length);
+ ds.forEach((d,i)=>d.nums.forEach(n=>{freq[n]++;gap[n]=ds.length-1-i}));return{freq,gap};
+}
+function renderAnalysis(){
+ const ds=analysisDataset(),s=stats(ds),nums=[...Array(cfg().max)].map((_,i)=>i+1);
+ drawCount.textContent=draws.length;lastDraw.textContent=draws.length?`第${draws.at(-1).round}回`:'-';avgSum.textContent=ds.length?Math.round(ds.reduce((a,d)=>a+d.nums.reduce((x,y)=>x+y,0),0)/ds.length):'-';
+ const hot=[...nums].sort((a,b)=>s.freq[b]-s.freq[a]).slice(0,8),cold=[...nums].sort((a,b)=>s.gap[b]-s.gap[a]).slice(0,8);
+ hotBalls.innerHTML=hot.map(n=>`<span class="ball hot clickable" data-num="${n}">${String(n).padStart(2,'0')}</span>`).join('');coldBalls.innerHTML=cold.map(n=>`<span class="ball cold clickable" data-num="${n}">${String(n).padStart(2,'0')}</span>`).join('');bindNumberClicks();
+ freqTitle.textContent=`出現回数 1〜${cfg().max}`;const mx=Math.max(...s.freq,1);frequencyBars.innerHTML=nums.map(n=>`<div class="barrow"><b>${String(n).padStart(2,'0')}</b><div class="bar"><div class="fill" style="width:${s.freq[n]/mx*100}%"></div></div><span>${s.freq[n]}回</span></div>`).join('');
+ if(!ds.length){trendText.textContent='データを読み込むと分析が出ます。';return}
+ const sums=ds.map(d=>d.nums.reduce((a,b)=>a+b,0)),con=ds.filter(d=>d.nums.some((n,i,a)=>i&&n-a[i-1]===1)).length;
+ trendText.innerHTML=`平均合計 <b>${Math.round(sums.reduce((a,b)=>a+b,0)/sums.length)}</b>・連番を含む回 <b>${Math.round(con/ds.length*100)}%</b>`;
+}
+function riverScores(ds){
+ const c=cfg(),scores=Array(c.max+1).fill(0),reasons=Array.from({length:c.max+1},()=>[]),recent=ds.slice(-10),latest=recent.at(-1),p1=recent.at(-2),p2=recent.at(-3);
+ for(let n=1;n<=c.max;n++){let chain=0;for(let i=recent.length-1;i>=0;i--){if(recent[i].nums.some(x=>Math.abs(x-n)<=1))chain++;else break}if(chain>=2){scores[n]+=chain*2.2;reasons[n].push(`垂直${chain}回`)}}
+ if(p2&&p1&&latest)for(const a of p2.nums)for(const b of p1.nums){const step=b-a;if(step===0||Math.abs(step)>3)continue;const cc=b+step;if(!latest.nums.some(x=>Math.abs(x-cc)<=1))continue;const next=cc+step;if(next>=1&&next<=c.max){scores[next]+=6-Math.abs(step);reasons[next].push(`斜め${a}→${b}→${cc}→${next}`)}}
+ const last5=ds.slice(-5),bands=[];for(let start=1;start<=Math.max(1,c.max-9);start++){const end=start+9,count=last5.reduce((s,d)=>s+d.nums.filter(n=>n>=start&&n<=end).length,0);bands.push({start,end,count})}bands.sort((a,b)=>b.count-a.count);const main=bands[0];
+ if(main)for(let n=main.start;n<=Math.min(c.max,main.end);n++){scores[n]+=main.count/5;reasons[n].push(`本流${main.start}〜${main.end}`)}
+ for(let n=1;n<=c.max;n++){let gap=0;for(let i=ds.length-1;i>=0;i--){if(ds[i].nums.includes(n))break;gap++}if(gap>=7){scores[n]+=Math.min(5,gap*.35);reasons[n].push(`空き${gap}回`)}}
+ if(latest){for(const b of latest.bonuses||[])for(let n=Math.max(1,b-2);n<=Math.min(c.max,b+2);n++){scores[n]+=n===b?4:2.5;reasons[n].push(`B${b}周辺`)}}
+ const candidates=[...Array(c.max)].map((_,i)=>i+1).sort((a,b)=>scores[b]-scores[a]);return{scores,reasons,candidates,main};
+}
+function renderRiver(){
+ const ds=draws.slice(-Number(riverWindow.value||20)),r=riverScores(draws),c=cfg();
+ if(ds.length<3){riverChart.innerHTML='<p class="notice" style="padding:14px">3回分以上のデータが必要です。</p>';riverRanking.innerHTML='';return}
+ let g=`<div class="riverGrid" style="grid-template-columns:62px repeat(${c.max},24px);min-width:${62+c.max*24}px"><div class="cell head round">回</div>`;
+ for(let n=1;n<=c.max;n++)g+=`<div class="cell head">${n}</div>`;
+ ds.forEach(d=>{g+=`<div class="cell round">${d.round}</div>`;for(let n=1;n<=c.max;n++){const h=d.nums.includes(n),b=(d.bonuses||[]).includes(n);g+=`<div class="cell">${h?`<span class="hit">${n}</span>`:b?`<span class="bonus">${n}</span>`:''}</div>`}});g+='</div>';riverChart.innerHTML=g;
+ const mx=Math.max(...r.scores,1);riverRanking.innerHTML=r.candidates.slice(0,12).map(n=>`<div class="scoreRow"><b>${String(n).padStart(2,'0')}</b><div><div class="bar"><div class="fill" style="width:${r.scores[n]/mx*100}%"></div></div><div class="mini">${r.reasons[n].slice(0,2).join('・')}</div></div><span class="score">${r.scores[n].toFixed(1)}</span></div>`).join('');
+ riverSummary.innerHTML=`本流：<b>${r.main?.start??'-'}〜${r.main?.end??'-'}</b>　上位：<b>${r.candidates.slice(0,5).map(n=>String(n).padStart(2,'0')).join('・')}</b>`;
+}
+function numberComponents(n,ds){
+ const s=stats(ds),river=riverScores(ds),maxF=Math.max(...s.freq,1),maxG=Math.max(...s.gap,1),latest=ds.at(-1),prev=ds.at(-2);
+ const refs=[...(latest?.nums||[]),...(latest?.bonuses||[]),...(prev?.nums||[])];
+ const hot=Math.round(s.freq[n]/maxF*34),gap=Math.round(s.gap[n]/maxG*18),rv=Math.round(Math.min(28,river.scores[n]*3.2)),carry=refs.includes(n)?8:0,pm11=refs.some(x=>Math.abs(x-n)===11)?9:0,base=18;
+ return{base,hot,gap,river:rv,carry,pm11,total:Math.min(99,base+hot+gap+rv+carry+pm11)};
+}
+function favoriteKey(){return key('favorites')}
+function getFavorites(){try{return JSON.parse(store.get(favoriteKey())||'[]').filter(n=>Number.isInteger(n)&&n>=1&&n<=cfg().max)}catch(e){return[]}}
+function setFavorites(v){store.set(favoriteKey(),JSON.stringify(v.slice(0,8)));renderFavorites()}
+function toggleFavorite(n){const f=getFavorites(),i=f.indexOf(n);if(i>=0)f.splice(i,1);else{if(f.length>=8){alert('お気に入りは最大8個までやで');return}f.push(n)}setFavorites(f);showNumberCard(n)}
+function renderFavorites(){if(!favoriteNumbers)return;const f=getFavorites();favoriteNumbers.innerHTML=f.length?`<div class="favoriteStrip">${f.map(n=>`<div class="favoriteItem clickable" data-num="${n}"><span class="mini">NUMBER</span><b>${String(n).padStart(2,'0')}</b></div>`).join('')}</div>`:'<div class="emptyFavorite">数字カルテの「☆ お気に入りに追加」から登録できます。</div>';bindNumberClicks()}
+function eyeScores(ds){
+ const c=cfg(),s=stats(ds),river=riverScores(ds),maxF=Math.max(...s.freq,1),maxG=Math.max(...s.gap,1),latest=ds.at(-1),prev=ds.at(-2);
+ const rows=[];
+ for(let n=1;n<=c.max;n++){
+  const comp=numberComponents(n,ds),hot=comp.hot,gap=comp.gap,rv=comp.river,carry=comp.carry,pm11=comp.pm11,score=comp.total;
+  const reasons=[];
+  if(hot>=20)reasons.push('ホット');
+  if(gap>=10)reasons.push('空き');
+  if(rv>=12)reasons.push('川');
+  if(carry)reasons.push('引っ張り');
+  if(pm11)reasons.push('±11');
+  rows.push({n,score,reasons});
+ }
+ return rows.sort((a,b)=>b.score-a.score||a.n-b.n);
+}
+function renderEye(){
+ if(!eyeStatus)return;
+ if(draws.length<3){renderFavorites();eyeStatus.innerHTML='データを3回分以上読み込むと、注目数字を分析します。';eyeTop.innerHTML='';eyeRanking.innerHTML='';eyeMetrics.innerHTML='';eyeComment.innerHTML='<span>まず「データ」→「サンプルを読込」で試せます。</span>';eyeScoreRing?.style.setProperty('--p',0);if(eyeScoreValue)eyeScoreValue.textContent='--';if(eyeHeadline)eyeHeadline.textContent='データ待機中';if(eyeHeroText)eyeHeroText.textContent='当選データを読み込むと分析が始まります。';if(eyeChips)eyeChips.innerHTML='';return}
+ renderFavorites();
+ const ew=Number(eyeWindow?.value||30),ds=ew?draws.slice(-ew):draws,rank=eyeScores(ds),top=rank.slice(0,5),latest=draws.at(-1);
+ eyeStatus.innerHTML=`<b>${cfg().name}</b>・第${latest.round+1}回向け分析（第${latest.round}回までの${ds.length}回を使用）`;
+ const overall=Math.round(top.reduce((a,x)=>a+x.score,0)/top.length);eyeScoreRing?.style.setProperty('--p',overall);if(eyeScoreValue)eyeScoreValue.textContent=overall;if(eyeHeadline)eyeHeadline.textContent=`${String(top[0].n).padStart(2,'0')}を軸にした流れ`;if(eyeHeroText)eyeHeroText.textContent=`上位5数字の平均スコアは${overall}。数字をタップすると根拠を確認できます。`;
+ eyeTop.innerHTML=top.map((x,i)=>`<div class="focusCard clickable" data-num="${x.n}"><div class="focusRank">${i+1}位</div><div class="focusNum">${String(x.n).padStart(2,'0')}</div><div class="focusScore">${x.score}%</div></div>`).join('');bindNumberClicks();
+ const band=top.filter(x=>x.n>cfg().low).length>=3?'高数字側':top.filter(x=>x.n<=cfg().low).length>=3?'低数字側':'全体';
+ const dominant=top.flatMap(x=>x.reasons).reduce((a,r)=>(a[r]=(a[r]||0)+1,a),{});const keyReason=Object.entries(dominant).sort((a,b)=>b[1]-a[1])[0]?.[0]||'総合バランス';if(eyeChips)eyeChips.innerHTML=`<span class="chip">本流 <strong>${riverScores(ds).main?.start??'-'}〜${riverScores(ds).main?.end??'-'}</strong></span><span class="chip">主傾向 <strong>${keyReason}</strong></span><span class="chip">方向 <strong>${band}</strong></span>`;
+ eyeComment.innerHTML=`<b style="font-size:16px">AIコメント</b><span>今回は${band}に注目が集まっています。特に「${keyReason}」の条件が重なった数字を上位にしました。過去傾向の表示であり、当選を保証するものではありません。</span>`;
+ const mx=Math.max(...rank.map(x=>x.score),1);eyeRanking.innerHTML=rank.slice(0,12).map((x,i)=>`<div class="scoreRow pro clickable" data-num="${x.n}"><span class="rankBadge ${i===0?'top1':i===1?'top2':i===2?'top3':''}">${i+1}</span><div><div style="display:flex;justify-content:space-between"><strong>${String(x.n).padStart(2,'0')}</strong><span class="mini">${x.reasons.slice(0,3).join('・')||'総合'}</span></div><div class="bar"><div class="fill" style="width:${x.score/mx*100}%"></div></div></div><span class="score">${x.score}%</span></div>`).join('');bindNumberClicks();
+ const metricNames=['ホット','川','±11','空き'];eyeMetrics.innerHTML='<h2>注目度ゲージ</h2>'+metricNames.map(name=>{const pct=Math.min(100,Math.round(top.filter(x=>x.reasons.includes(name)).length/top.length*100+35));return `<div class="metric"><div class="metricHead"><b>${name}</b><span>${pct}%</span></div><div class="bar"><div class="fill" style="width:${pct}%"></div></div></div>`}).join('');
+}
+function generateType(styleName,label,emoji){
+ const ds=dataset(),c=cfg(),s=stats(ds),found=new Map();
+ for(let i=0;i<90000&&found.size<120;i++){
+  const nums=[];while(nums.length<c.picks){const n=1+Math.floor(Math.random()*c.max);if(!nums.includes(n))nums.push(n)}nums.sort((a,b)=>a-b);
+  const ev=evaluate(nums,ds,s,styleName);if(ev)found.set(nums.join('-'),{nums,...ev});
+ }
+ const best=[...found.values()].sort((a,b)=>b.score-a.score)[0];return best?{...best,label,emoji,styleName}:null;
+}
+function generateThreeAI(){
+ if(draws.length<3){alert('当選データを3回分以上読み込んでな');return}
+ const sets=[generateType('hot','堅実AI','🟢'),generateType('total','標準AI','🟡'),generateType('cold','一発AI','🔴')].filter(Boolean);
+ threeAiOutput.classList.remove('hidden');
+ threeAiOutput.innerHTML=`<h2>3タイプAI候補</h2>${sets.map(x=>`<div class="ticket"><div class="ticketHead"><b>${x.emoji} ${x.label}</b><span class="score">${Math.min(99,Math.round(62+x.score/8))}%</span></div><div class="balls">${x.nums.map(n=>`<span class="ball">${String(n).padStart(2,'0')}</span>`).join('')}</div><div class="mini" style="margin-top:8px">${x.reasons.join('・')}</div></div>`).join('')||'<p class="notice">条件が厳しすぎます。予想タブでルールを少し減らしてください。</p>'}`;
+ if(sets.length){const h=JSON.parse(store.get(key('history'))||'[]');h.unshift({at:new Date().toLocaleString('ja-JP'),round:draws.at(-1).round,mode:'3タイプAI',tickets:sets.map(x=>x.nums)});store.set(key('history'),JSON.stringify(h.slice(0,30)));renderHistory()}
+}
+
+function bindNumberClicks(){document.querySelectorAll('[data-num]').forEach(el=>{el.onclick=()=>showNumberCard(Number(el.dataset.num))})}
+function showNumberCard(n){
+ const ds=analysisDataset().length?analysisDataset():draws;if(!ds.length)return;
+ const s=stats(ds),r=riverScores(ds),rank=eyeScores(ds),row=rank.find(x=>x.n===n),comp=numberComponents(n,ds);
+ const lastIndex=[...ds].reverse().findIndex(d=>d.nums.includes(n)),gap=lastIndex<0?ds.length:lastIndex;
+ const pairs={};ds.forEach(d=>{if(d.nums.includes(n))d.nums.filter(x=>x!==n).forEach(x=>pairs[x]=(pairs[x]||0)+1)});
+ const pairTop=Object.entries(pairs).sort((a,b)=>b[1]-a[1]||Number(a[0])-Number(b[0])).slice(0,5);
+ const maxF=Math.max(...s.freq,1),hot=Math.round(s.freq[n]/maxF*100),river=Math.min(100,Math.round(r.scores[n]*12));
+ const grade=(row?.score||0)>=85?'S':(row?.score||0)>=70?'A':(row?.score||0)>=55?'B':'C',fav=getFavorites().includes(n);
+ const periods=[10,30,100,0].map(w=>{const part=w?draws.slice(-w):draws,total=part.length,hits=part.filter(d=>d.nums.includes(n)).length,rate=total?hits/total*100:0;return{label:w?`${w}回`:'全期間',hits,total,rate}});
+ const maxRate=Math.max(...periods.map(x=>x.rate),1);
+ const reasonText=row?.reasons.length?row.reasons.join('・'):'総合バランス';
+ const comment=comp.hot>=24&&comp.river>=14?`${String(n).padStart(2,'0')}は出現頻度と川の流れが同時に強い数字です。軸候補として観察価値があります。`:comp.gap>=12?`${String(n).padStart(2,'0')}は空き回数が長めです。反発候補として注目されますが、空きだけでの判断は禁物です。`:comp.pm11?`直近数字との±11関係が成立しています。ほかの条件と組み合わせて使う数字です。`:`突出した一条件ではなく、複数項目の合計で評価されています。組み合わせ全体のバランス向きです。`;
+ const breakdown=[['基礎',comp.base],['ホット',comp.hot],['空き',comp.gap],['川',comp.river],['引っ張り',comp.carry],['±11',comp.pm11]];
+ numberCardBody.innerHTML=`<div class="eyebrow">NUMBER PROFILE β0.5</div><div class="profileHero"><div class="profileBall">${String(n).padStart(2,'0')}</div><div><h2 class="profileTitle">数字カルテ</h2><div class="notice">${cfg().name}・${ds.length}回分で分析</div><div class="trendChips"><span class="chip">評価 <strong>${grade}</strong></span><span class="chip">スコア <strong>${row?.score||0}</strong></span><span class="chip">空き <strong>${gap}回</strong></span></div></div></div><button id="favoriteToggle" class="favBtn ${fav?'on':''}">${fav?'★ お気に入り登録済み':'☆ お気に入りに追加'}</button><div class="grid3"><div class="stat"><b>${s.freq[n]}回</b><span>期間内出現</span></div><div class="stat"><b>${hot}%</b><span>ホット度</span></div><div class="stat"><b>${river}%</b><span>川評価</span></div></div><h3>分析スコア内訳</h3><div class="breakdown">${breakdown.map(([name,val])=>`<div class="breakRow"><span>${name}</span><div class="bar"><div class="fill" style="width:${Math.min(100,val/34*100)}%"></div></div><strong>+${val}</strong></div>`).join('')}<div class="ticketHead" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><b>合計</b><span class="score">${row?.score||comp.total}点</span></div></div><h3>期間別の出現</h3><div class="periodGrid">${periods.map(x=>`<div class="periodBox"><b>${x.hits}回</b><span>${x.label} / ${x.rate.toFixed(1)}%</span></div>`).join('')}</div><div class="miniChart">${periods.map(x=>`<div class="miniChartCol"><div class="miniChartBar" style="height:${Math.max(3,x.rate/maxRate*74)}px"></div><small>${x.label}</small></div>`).join('')}</div><h3>AIコメント</h3><div class="aiNote">${comment}<br><span class="mini">評価根拠：${reasonText}</span></div><h3>一緒に出やすい数字 TOP5</h3><div class="balls">${pairTop.length?pairTop.map(([x,c])=>`<span class="ball pairBall clickable" data-num="${x}">${String(x).padStart(2,'0')}<i class="pairCount">${c}</i></span>`).join(''):'<span class="notice">データ不足</span>'}</div>`;
+ numberModal.classList.add('showModal');$('favoriteToggle').onclick=()=>toggleFavorite(n);bindNumberClicks()
+}
+closeModal.onclick=()=>numberModal.classList.remove('showModal');numberModal.onclick=e=>{if(e.target===numberModal)numberModal.classList.remove('showModal')};analysisWindow?.addEventListener('change',()=>{renderAnalysis();renderEye()});eyeWindow?.addEventListener('change',renderEye);
+
+eyeGenerateBtn.addEventListener('click',generateThreeAI);
+function evaluate(nums,ds,s,style){
+ const c=cfg(),latest=ds.at(-1),prev=ds.at(-2),river=riverScores(ds);let score=0,reasons=[];
+ const maxF=Math.max(...s.freq,1),maxG=Math.max(...s.gap,1);
+ nums.forEach(n=>{const hot=s.freq[n]/maxF,cold=s.gap[n]/maxG;score+=style==='hot'?hot*5:style==='cold'?cold*5:style==='river'?river.scores[n]*1.5:style==='total'?hot*2+cold*1.3+river.scores[n]*1.1:hot*2+cold*1.5});
+ const refs=[...(latest?.nums||[]),...(latest?.bonuses||[]),...(prev?.nums||[]),...(prev?.bonuses||[])];
+ const carry=nums.filter(n=>refs.includes(n)).length;if(enabled('carry')&&carry<1)return null;if(carry)reasons.push(`引っ張り${carry}`);
+ const p11=nums.filter(n=>refs.some(r=>Math.abs(n-r)===11)).length;if(enabled('plus11')&&p11<1)return null;if(p11)reasons.push('±11');
+ const tails={};nums.forEach(n=>tails[n%10]=(tails[n%10]||0)+1);if(enabled('sameTail')&&!Object.values(tails).some(v=>v>=2))return null;
+ if(enabled('multiple5')&&!nums.some(n=>n%5===0))return null;
+ const odd=nums.filter(n=>n%2).length;if(enabled('oddEven')&&!c.odd.includes(odd))return null;
+ const low=nums.filter(n=>n<=c.low).length;if(enabled('lowHigh')&&!c.lowCounts.includes(low))return null;
+ const cons=nums.filter((n,i)=>i&&n-nums[i-1]===1).length;if(enabled('consecutive')&&cons>1)return null;
+ const sum=nums.reduce((a,b)=>a+b,0);if(enabled('sum')&&(sum<c.sum[0]||sum>c.sum[1]))return null;
+ const riverTop=new Set(river.candidates.slice(0,Math.min(14,c.max)));const riverHits=nums.filter(n=>riverTop.has(n)).length;if(enabled('river')&&riverHits<2)return null;
+ if(enabled('pastSet')&&ds.some(d=>d.nums.join('-')===nums.join('-')))return null;
+ score+=riverHits*2.5+8-Math.abs(sum-(c.sum[0]+c.sum[1])/2)/12;reasons.push(`川${riverHits}`,`合計${sum}`,`奇偶${odd}:${c.picks-odd}`,`低高${low}:${c.picks-low}`);return{score,reasons};
+}
+generateBtn.onclick=()=>{
+ const ds=dataset();if(ds.length<2){alert('当選データを2回分以上読み込んでな');return}
+ const c=cfg(),s=stats(ds),count=Number(ticketCount.value),found=new Map();
+ for(let i=0;i<100000&&found.size<count*20;i++){const nums=[];while(nums.length<c.picks){const n=1+Math.floor(Math.random()*c.max);if(!nums.includes(n))nums.push(n)}nums.sort((a,b)=>a-b);const ev=evaluate(nums,ds,s,style.value);if(ev)found.set(nums.join('-'),{nums,...ev})}
+ const arr=[...found.values()].sort((a,b)=>b.score-a.score).slice(0,count);predictionOutput.classList.remove('hidden');predictionOutput.innerHTML=`<h2>${c.name} 今回の候補</h2>${arr.map((t,i)=>`<div class="ticket"><div class="ticketHead"><b>候補 ${i+1}</b><span class="score">${t.score.toFixed(1)} pt</span></div><div class="balls">${t.nums.map(n=>`<span class="ball">${String(n).padStart(2,'0')}</span>`).join('')}</div><div class="mini" style="margin-top:8px">${t.reasons.join('・')}</div></div>`).join('')||'<p class="notice">条件が厳しすぎます。ルールを1〜2個オフにして再実行してください。</p>'}`;
+ if(arr.length){const h=JSON.parse(store.get(key('history'))||'[]');h.unshift({at:new Date().toLocaleString('ja-JP'),round:draws.at(-1).round,tickets:arr.map(x=>x.nums)});store.set(key('history'),JSON.stringify(h.slice(0,30)))}
+};
+function renderHistory(){const h=JSON.parse(store.get(key('history'))||'[]');historyList.innerHTML=h.length?h.map(x=>`<div class="ticket"><b>${x.at}</b><div class="mini">${cfg().name}・第${x.round}回まで${x.mode?'・'+x.mode:''}</div>${x.tickets.map(t=>`<div style="margin-top:6px">${t.map(n=>String(n).padStart(2,'0')).join(' - ')}</div>`).join('')}</div>`).join(''):'<p class="notice">まだ履歴はありません。</p>'}
+clearHistoryBtn.onclick=()=>{store.remove(key('history'));renderHistory()};
+riverWindow.addEventListener('change',renderRiver);
+try{
+ loadGame();
+}catch(err){
+ console.error(err);
+ document.querySelectorAll('.tab').forEach(b=>{
+  b.addEventListener('click',()=>{
+   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+   document.querySelectorAll('section').forEach(x=>x.classList.remove('show'));
+   b.classList.add('active');
+   const panel=document.getElementById(b.dataset.tab);
+   if(panel)panel.classList.add('show');
+  });
+ });
+ const msg=document.createElement('div');
+ msg.className='card notice';
+ msg.innerHTML='<b>簡易モードで起動しました。</b><br>データ保存はできませんが、画面操作はできます。';
+ document.querySelector('header').after(msg);
+}
+
+</script>
+<script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));}</script></body></html>
