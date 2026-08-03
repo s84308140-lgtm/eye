@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0e14"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg">
-<title>ロトの目 β0.7｜5口AI予想</title>
+<title>ロトの目 β0.8 Part1｜JSONデータ基盤</title>
 <style>
 :root{--bg:#080a0f;--panel:#121722;--line:#2a3346;--text:#f4f6fb;--muted:#98a3b8;--accent:#d9ff43;--blue:#6aa9ff;--gold:#ffd55c;--violet:#a98bff}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% -10%,#1d2432 0,#080a0f 45%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
@@ -56,6 +56,14 @@ label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}select,in
 .aiSummary .stat b{font-size:17px}
 @media(min-width:720px){.aiFiveGrid{grid-template-columns:1fr 1fr}.aiFiveCard:first-child{grid-column:1/-1}}
 
+
+.jsonPanel{border-color:#3f6656;background:linear-gradient(145deg,#14231d,#101712)}
+.jsonStatus{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:5px 8px;font-size:10px;color:var(--muted)}
+.jsonStatus.ok{color:#6ee0ad;border-color:#2f7457}
+.jsonStatus.warn{color:#ffd98a;border-color:#765f2d}
+.jsonInfo{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
+.jsonInfo .stat b{font-size:17px}
+
 </style>
 </head>
 <body>
@@ -67,8 +75,8 @@ label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}select,in
 </header>
 
 <div class="card" style="border-color:#53617a">
-  <div class="notice"><b style="color:#f4f6fb">β0.7｜5口AI予想</b><br>
-  5タイプAI予想・完全クイックピック・バランスクイックを追加しました。
+  <div class="notice"><b style="color:#f4f6fb">β0.8 Part1｜JSONデータ基盤</b><br>
+  JSONデータベースを正式導入し、CSVなしでも共通データから分析できる土台を追加しました。
   </div>
 </div>
 
@@ -97,7 +105,7 @@ label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}select,in
 <div class="eyebrow">WEEKLY FOCUS</div>
 <h2 style="font-size:22px;margin-top:6px">👁 今回のロトの目</h2>
 <div class="sectionTitleRow"><div id="eyeStatus" class="notice"></div><select id="eyeWindow"><option value="10">直近10回</option><option value="30" selected>直近30回</option><option value="100">直近100回</option><option value="0">全期間</option></select></div>
-<div class="eyeHero"><div id="eyeScoreRing" class="scoreRing"><div class="scoreRingInner"><b id="eyeScoreValue">--</b><span>総合注目度</span></div></div><div class="heroCopy"><span class="versionPill">LIVE ANALYSIS β0.7</span><h3 id="eyeHeadline">データ待機中</h3><p id="eyeHeroText" class="notice">当選データを読み込むと分析が始まります。</p><div id="eyeChips" class="trendChips"></div></div></div>
+<div class="eyeHero"><div id="eyeScoreRing" class="scoreRing"><div class="scoreRingInner"><b id="eyeScoreValue">--</b><span>総合注目度</span></div></div><div class="heroCopy"><span class="versionPill">LIVE ANALYSIS β0.8</span><h3 id="eyeHeadline">データ待機中</h3><p id="eyeHeroText" class="notice">当選データを読み込むと分析が始まります。</p><div id="eyeChips" class="trendChips"></div></div></div>
 <div id="eyeTop" class="focusGrid"></div>
 <div id="eyeComment" class="stat"></div><div id="eyeMetrics" class="card" style="margin:12px 0 0"></div>
 <button id="eyeGenerateBtn" class="primary" style="width:100%;margin-top:14px">3タイプAIを生成</button>
@@ -162,6 +170,24 @@ label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}select,in
 </section>
 
 <section id="data">
+
+<div class="card jsonPanel">
+  <div class="ticketHead">
+    <div>
+      <div class="eyebrow">JSON DATABASE</div>
+      <h2 style="margin-top:5px">📦 ロトの目データベース</h2>
+    </div>
+    <span id="jsonStatus" class="jsonStatus">未読込</span>
+  </div>
+  <p class="notice">data/lotodata.jsonから現在のゲームの抽せん履歴を読み込みます。</p>
+  <button id="loadJsonBtn" class="primary" style="width:100%">JSONデータを読み込む</button>
+  <div id="jsonMessage" class="notice" style="margin-top:10px"></div>
+  <div id="jsonInfo" class="jsonInfo hidden">
+    <div class="stat"><b id="jsonCount">0</b><span>JSON件数</span></div>
+    <div class="stat"><b id="jsonLatest">-</b><span>最新回</span></div>
+    <div class="stat"><b id="jsonUpdated">-</b><span>更新日</span></div>
+  </div>
+</div>
 
 <div class="card updatePanel">
   <div class="updateTop">
@@ -244,6 +270,15 @@ const quickPickBtn=$('quickPickBtn');
 const balancedQuickBtn=$('balancedQuickBtn');
 const quickOutput=$('quickOutput');
 const fiveAiOutput=$('fiveAiOutput');
+
+const jsonStatus=$('jsonStatus');
+const loadJsonBtn=$('loadJsonBtn');
+const jsonMessage=$('jsonMessage');
+const jsonInfo=$('jsonInfo');
+const jsonCount=$('jsonCount');
+const jsonLatest=$('jsonLatest');
+const jsonUpdated=$('jsonUpdated');
+
 
 
 const eyeStatus=$('eyeStatus');
@@ -328,7 +363,8 @@ function loadGame(){
  latestResult?.classList.add('hidden');
  if(latestMessage)latestMessage.textContent='';
  setLatestState('未確認');
- if(shouldAutoCheck())setTimeout(()=>checkLatestResult({silent:true}),500);
+ if(shouldAutoLoadJson())setTimeout(()=>loadSharedJson({silent:true}),250);
+ if(shouldAutoCheck())setTimeout(()=>checkLatestResult({silent:true}),700);
 }
 document.querySelectorAll('.gameBtn').forEach(b=>b.onclick=()=>{currentGame=b.dataset.game;store.set('lottery_current_game',currentGame);loadGame()});
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
@@ -388,6 +424,58 @@ async function checkLatestResult({silent=false}={}){
 }
 checkLatestBtn?.addEventListener('click',()=>checkLatestResult());
 function shouldAutoCheck(){const last=Number(store.get(`latest_check_${currentGame}`)||0);return Date.now()-last>6*60*60*1000}
+
+
+let sharedJsonData=null;
+function normalizeJsonDraw(item){
+ const round=Number(item.round??item.draw??item.drawNumber);
+ const date=item.date||item.drawDate||'';
+ const nums=(item.numbers||item.nums||item.mainNumbers||[]).map(Number).sort((a,b)=>a-b);
+ const bonuses=(item.bonus||item.bonuses||item.bonusNumbers||[]);
+ return {round,date,nums,bonuses:Array.isArray(bonuses)?bonuses.map(Number):[Number(bonuses)].filter(Boolean)};
+}
+function validateJsonDraw(draw){
+ const c=cfg();
+ return Number.isFinite(draw.round)&&draw.nums.length===c.picks&&new Set(draw.nums).size===c.picks&&draw.nums.every(n=>Number.isFinite(n)&&n>=1&&n<=c.max);
+}
+async function loadSharedJson({silent=false}={}){
+ loadJsonBtn.disabled=true;
+ jsonStatus.textContent='読込中';
+ jsonStatus.className='jsonStatus warn';
+ jsonMessage.textContent='data/lotodata.jsonを読み込んでいます…';
+ try{
+  const response=await fetch(`./data/lotodata.json?_=${Date.now()}`,{cache:'no-store'});
+  if(!response.ok)throw new Error(`JSON取得エラー（${response.status}）`);
+  const data=await response.json();
+  sharedJsonData=data;
+  const list=Array.isArray(data[currentGame])?data[currentGame]:[];
+  const normalized=list.map(normalizeJsonDraw).filter(validateJsonDraw).sort((a,b)=>a.round-b.round);
+  if(!normalized.length){
+   jsonStatus.textContent='データなし';
+   jsonStatus.className='jsonStatus warn';
+   jsonMessage.textContent=`${cfg().name}のJSONデータはまだ空です。CSV・手入力はそのまま使えます。`;
+   jsonInfo.classList.add('hidden');
+   return;
+  }
+  saveDraws(normalized);
+  jsonStatus.textContent='読込済み';
+  jsonStatus.className='jsonStatus ok';
+  jsonMessage.innerHTML=`<span class="ok">${normalized.length}件をJSONから読み込みました。</span>`;
+  jsonInfo.classList.remove('hidden');
+  jsonCount.textContent=normalized.length;
+  jsonLatest.textContent=`第${normalized.at(-1).round}回`;
+  jsonUpdated.textContent=data.updated||'-';
+  store.set(`json_loaded_${currentGame}`,String(Date.now()));
+ }catch(err){
+  console.error(err);
+  jsonStatus.textContent='失敗';
+  jsonStatus.className='jsonStatus warn';
+  jsonMessage.innerHTML=`<span class="red">JSONを読み込めませんでした。</span><br>${String(err.message||err)}`;
+  if(!silent)jsonInfo.classList.add('hidden');
+ }finally{loadJsonBtn.disabled=false}
+}
+loadJsonBtn?.addEventListener('click',()=>loadSharedJson());
+function shouldAutoLoadJson(){const last=Number(store.get(`json_loaded_${currentGame}`)||0);return Date.now()-last>6*60*60*1000}
 
 function parseCSV(text){
  const out=[],c=cfg();
@@ -520,7 +608,7 @@ function showNumberCard(n){
  const reasonText=row?.reasons.length?row.reasons.join('・'):'総合バランス';
  const comment=comp.hot>=24&&comp.river>=14?`${String(n).padStart(2,'0')}は出現頻度と川の流れが同時に強い数字です。軸候補として観察価値があります。`:comp.gap>=12?`${String(n).padStart(2,'0')}は空き回数が長めです。反発候補として注目されますが、空きだけでの判断は禁物です。`:comp.pm11?`直近数字との±11関係が成立しています。ほかの条件と組み合わせて使う数字です。`:`突出した一条件ではなく、複数項目の合計で評価されています。組み合わせ全体のバランス向きです。`;
  const breakdown=[['基礎',comp.base],['ホット',comp.hot],['空き',comp.gap],['川',comp.river],['引っ張り',comp.carry],['±11',comp.pm11]];
- numberCardBody.innerHTML=`<div class="eyebrow">NUMBER PROFILE β0.7</div><div class="profileHero"><div class="profileBall">${String(n).padStart(2,'0')}</div><div><h2 class="profileTitle">数字カルテ</h2><div class="notice">${cfg().name}・${ds.length}回分で分析</div><div class="trendChips"><span class="chip">評価 <strong>${grade}</strong></span><span class="chip">スコア <strong>${row?.score||0}</strong></span><span class="chip">空き <strong>${gap}回</strong></span></div></div></div><button id="favoriteToggle" class="favBtn ${fav?'on':''}">${fav?'★ お気に入り登録済み':'☆ お気に入りに追加'}</button><div class="grid3"><div class="stat"><b>${s.freq[n]}回</b><span>期間内出現</span></div><div class="stat"><b>${hot}%</b><span>ホット度</span></div><div class="stat"><b>${river}%</b><span>川評価</span></div></div><h3>分析スコア内訳</h3><div class="breakdown">${breakdown.map(([name,val])=>`<div class="breakRow"><span>${name}</span><div class="bar"><div class="fill" style="width:${Math.min(100,val/34*100)}%"></div></div><strong>+${val}</strong></div>`).join('')}<div class="ticketHead" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><b>合計</b><span class="score">${row?.score||comp.total}点</span></div></div><h3>期間別の出現</h3><div class="periodGrid">${periods.map(x=>`<div class="periodBox"><b>${x.hits}回</b><span>${x.label} / ${x.rate.toFixed(1)}%</span></div>`).join('')}</div><div class="miniChart">${periods.map(x=>`<div class="miniChartCol"><div class="miniChartBar" style="height:${Math.max(3,x.rate/maxRate*74)}px"></div><small>${x.label}</small></div>`).join('')}</div><h3>AIコメント</h3><div class="aiNote">${comment}<br><span class="mini">評価根拠：${reasonText}</span></div><h3>一緒に出やすい数字 TOP5</h3><div class="balls">${pairTop.length?pairTop.map(([x,c])=>`<span class="ball pairBall clickable" data-num="${x}">${String(x).padStart(2,'0')}<i class="pairCount">${c}</i></span>`).join(''):'<span class="notice">データ不足</span>'}</div>`;
+ numberCardBody.innerHTML=`<div class="eyebrow">NUMBER PROFILE β0.8</div><div class="profileHero"><div class="profileBall">${String(n).padStart(2,'0')}</div><div><h2 class="profileTitle">数字カルテ</h2><div class="notice">${cfg().name}・${ds.length}回分で分析</div><div class="trendChips"><span class="chip">評価 <strong>${grade}</strong></span><span class="chip">スコア <strong>${row?.score||0}</strong></span><span class="chip">空き <strong>${gap}回</strong></span></div></div></div><button id="favoriteToggle" class="favBtn ${fav?'on':''}">${fav?'★ お気に入り登録済み':'☆ お気に入りに追加'}</button><div class="grid3"><div class="stat"><b>${s.freq[n]}回</b><span>期間内出現</span></div><div class="stat"><b>${hot}%</b><span>ホット度</span></div><div class="stat"><b>${river}%</b><span>川評価</span></div></div><h3>分析スコア内訳</h3><div class="breakdown">${breakdown.map(([name,val])=>`<div class="breakRow"><span>${name}</span><div class="bar"><div class="fill" style="width:${Math.min(100,val/34*100)}%"></div></div><strong>+${val}</strong></div>`).join('')}<div class="ticketHead" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><b>合計</b><span class="score">${row?.score||comp.total}点</span></div></div><h3>期間別の出現</h3><div class="periodGrid">${periods.map(x=>`<div class="periodBox"><b>${x.hits}回</b><span>${x.label} / ${x.rate.toFixed(1)}%</span></div>`).join('')}</div><div class="miniChart">${periods.map(x=>`<div class="miniChartCol"><div class="miniChartBar" style="height:${Math.max(3,x.rate/maxRate*74)}px"></div><small>${x.label}</small></div>`).join('')}</div><h3>AIコメント</h3><div class="aiNote">${comment}<br><span class="mini">評価根拠：${reasonText}</span></div><h3>一緒に出やすい数字 TOP5</h3><div class="balls">${pairTop.length?pairTop.map(([x,c])=>`<span class="ball pairBall clickable" data-num="${x}">${String(x).padStart(2,'0')}<i class="pairCount">${c}</i></span>`).join(''):'<span class="notice">データ不足</span>'}</div>`;
  numberModal.classList.add('showModal');$('favoriteToggle').onclick=()=>toggleFavorite(n);bindNumberClicks()
 }
 closeModal.onclick=()=>numberModal.classList.remove('showModal');numberModal.onclick=e=>{if(e.target===numberModal)numberModal.classList.remove('showModal')};analysisWindow?.addEventListener('change',()=>{renderAnalysis();renderEye()});eyeWindow?.addEventListener('change',renderEye);

@@ -1,0 +1,7 @@
+ロトの目 β0.8 Part1
+- data/lotodata.json
+- data/aipredictions.json
+- JSONデータ読込カード
+- ゲーム別JSONデータ自動判定
+- JSONから既存分析へ統合
+- CSV・手入力との併用
