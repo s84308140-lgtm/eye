@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0e14"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg">
-<title>ロトの目 β0.8 Part1｜JSONデータ基盤</title>
+<title>ロトの目 β0.8 Part1.1.1｜JSONパス修正版</title>
 <style>
 :root{--bg:#080a0f;--panel:#121722;--line:#2a3346;--text:#f4f6fb;--muted:#98a3b8;--accent:#d9ff43;--blue:#6aa9ff;--gold:#ffd55c;--violet:#a98bff}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% -10%,#1d2432 0,#080a0f 45%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
@@ -75,7 +75,7 @@ label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}select,in
 </header>
 
 <div class="card" style="border-color:#53617a">
-  <div class="notice"><b style="color:#f4f6fb">β0.8 Part1｜JSONデータ基盤</b><br>
+  <div class="notice"><b style="color:#f4f6fb">β0.8 Part1.1｜JSONパス修正版</b><br>
   JSONデータベースを正式導入し、CSVなしでも共通データから分析できる土台を追加しました。
   </div>
 </div>
@@ -179,7 +179,7 @@ label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}select,in
     </div>
     <span id="jsonStatus" class="jsonStatus">未読込</span>
   </div>
-  <p class="notice">data/lotodata.jsonから現在のゲームの抽せん履歴を読み込みます。</p>
+  <p class="notice">lotodata.jsonから現在のゲームの抽せん履歴を読み込みます。</p>
   <button id="loadJsonBtn" class="primary" style="width:100%">JSONデータを読み込む</button>
   <div id="jsonMessage" class="notice" style="margin-top:10px"></div>
   <div id="jsonInfo" class="jsonInfo hidden">
@@ -442,9 +442,9 @@ async function loadSharedJson({silent=false}={}){
  loadJsonBtn.disabled=true;
  jsonStatus.textContent='読込中';
  jsonStatus.className='jsonStatus warn';
- jsonMessage.textContent='data/lotodata.jsonを読み込んでいます…';
+ jsonMessage.textContent='lotodata.jsonを読み込んでいます…';
  try{
-  const response=await fetch(`./data/lotodata.json?_=${Date.now()}`,{cache:'no-store'});
+  const response=await fetch(`./lotodata.json?_=${Date.now()}`,{cache:'no-store'});
   if(!response.ok)throw new Error(`JSON取得エラー（${response.status}）`);
   const data=await response.json();
   sharedJsonData=data;

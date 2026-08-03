@@ -1,0 +1,11 @@
+ロトの目 β0.8 Part1.1
+
+修正:
+- JSON参照先をルートへ変更
+  - ./lotodata.json
+  - ./aipredictions.json
+- 現在のGitHub配置のまま404を解消
+
+GitHubルートに次の2ファイルがあれば動きます:
+- lotodata.json
+- aipredictions.json
