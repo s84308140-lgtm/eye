@@ -1,6 +1,7 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "updated": "2026-08-03",
+  "note": "実際の予想履歴は各端末のlocalStorageへ保存され、履歴画面からJSON書き出しできます。",
   "history": [],
   "ranking": []
 }

@@ -64,6 +64,19 @@ label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}select,in
 .jsonInfo{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
 .jsonInfo .stat b{font-size:17px}
 
+
+.leagueGrid{display:grid;gap:9px}
+.leagueRow{display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:10px;padding:11px;background:#0b0e14;border:1px solid var(--line);border-radius:14px}
+.leagueRank{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:#20283a;font-weight:900}
+.leagueRow:nth-child(1) .leagueRank{background:#d6a932;color:#14110a}
+.leagueRow:nth-child(2) .leagueRank{background:#d8dde8;color:#111827}
+.leagueRow:nth-child(3) .leagueRank{background:#b87545;color:#160d08}
+.leagueMeta{font-size:10px;color:var(--muted);margin-top:3px}
+.hitBadge{border:1px solid var(--line);border-radius:999px;padding:5px 8px;font-size:10px;color:var(--lime)}
+.historyScore{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.historyScore span{font-size:10px;padding:5px 7px;border:1px solid var(--line);border-radius:999px}
+.pagesBadge{display:inline-flex;align-items:center;border:1px solid #3b745c;color:#74e6b0;border-radius:999px;padding:5px 8px;font-size:10px}
+
 </style>
 </head>
 <body>
@@ -75,8 +88,8 @@ label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}select,in
 </header>
 
 <div class="card" style="border-color:#53617a">
-  <div class="notice"><b style="color:#f4f6fb">β0.8 Part1.1｜JSONパス修正版</b><br>
-  JSONデータベースを正式導入し、CSVなしでも共通データから分析できる土台を追加しました。
+  <div class="notice"><b style="color:#f4f6fb">β0.9｜AIリーグ</b><br>
+  GitHub Pages対応。AI予想を保存し、新しい抽せん結果を入れると自動採点・ランキング更新します。
   </div>
 </div>
 
@@ -105,7 +118,7 @@ label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}select,in
 <div class="eyebrow">WEEKLY FOCUS</div>
 <h2 style="font-size:22px;margin-top:6px">👁 今回のロトの目</h2>
 <div class="sectionTitleRow"><div id="eyeStatus" class="notice"></div><select id="eyeWindow"><option value="10">直近10回</option><option value="30" selected>直近30回</option><option value="100">直近100回</option><option value="0">全期間</option></select></div>
-<div class="eyeHero"><div id="eyeScoreRing" class="scoreRing"><div class="scoreRingInner"><b id="eyeScoreValue">--</b><span>総合注目度</span></div></div><div class="heroCopy"><span class="versionPill">LIVE ANALYSIS β0.8</span><h3 id="eyeHeadline">データ待機中</h3><p id="eyeHeroText" class="notice">当選データを読み込むと分析が始まります。</p><div id="eyeChips" class="trendChips"></div></div></div>
+<div class="eyeHero"><div id="eyeScoreRing" class="scoreRing"><div class="scoreRingInner"><b id="eyeScoreValue">--</b><span>総合注目度</span></div></div><div class="heroCopy"><span class="versionPill">LIVE ANALYSIS β0.9</span><h3 id="eyeHeadline">データ待機中</h3><p id="eyeHeroText" class="notice">当選データを読み込むと分析が始まります。</p><div id="eyeChips" class="trendChips"></div></div></div>
 <div id="eyeTop" class="focusGrid"></div>
 <div id="eyeComment" class="stat"></div><div id="eyeMetrics" class="card" style="margin:12px 0 0"></div>
 <button id="eyeGenerateBtn" class="primary" style="width:100%;margin-top:14px">3タイプAIを生成</button>
@@ -221,6 +234,25 @@ label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}select,in
 </section>
 
 <section id="history">
+
+<div class="card" style="border-color:#5f6541">
+  <div class="ticketHead">
+    <div>
+      <div class="eyebrow">AI LEAGUE</div>
+      <h2 style="margin-top:5px">🏆 AI成績ランキング</h2>
+    </div>
+    <span class="pagesBadge">GitHub Pages版</span>
+  </div>
+  <p class="notice">5タイプAI予想を保存し、その次の抽せん結果が登録されると自動採点します。</p>
+  <div id="leagueSummary" class="aiSummary">
+    <div class="stat"><b id="leagueScored">0</b><span>採点済み</span></div>
+    <div class="stat"><b id="leagueBest">-</b><span>首位AI</span></div>
+    <div class="stat"><b id="leagueTopHit">0</b><span>最高一致</span></div>
+  </div>
+  <div id="leagueList" class="leagueGrid"></div>
+  <button id="exportAiBtn" style="width:100%;margin-top:10px">AI履歴をJSON保存</button>
+</div>
+
 <div class="card"><h2>予想履歴</h2><div id="historyList"></div><button id="clearHistoryBtn" class="danger" style="width:100%;margin-top:12px">履歴を削除</button></div>
 </section>
 
@@ -260,10 +292,17 @@ const style=$('style');
 const predictionOutput=$('predictionOutput');
 const historyList=$('historyList');
 const clearHistoryBtn=$('clearHistoryBtn');
-const latestState=$('latestState');
-const checkLatestBtn=$('checkLatestBtn');
-const latestMessage=$('latestMessage');
-const latestResult=$('latestResult');
+
+const leagueList=$('leagueList');
+const leagueScored=$('leagueScored');
+const leagueBest=$('leagueBest');
+const leagueTopHit=$('leagueTopHit');
+const exportAiBtn=$('exportAiBtn');
+
+
+
+
+
 
 const generateFiveAiBtn=$('generateFiveAiBtn');
 const quickPickBtn=$('quickPickBtn');
@@ -359,12 +398,7 @@ function loadGame(){
  manualNums.placeholder=`本数字${cfg().picks}個を空白区切り`;
  manualBonus.placeholder=cfg().bonuses===2?'例：5 31':'例：12';
  renderRules();renderAnalysis();renderRiver();renderHistory();renderEye();
- pendingLatestDraw=null;
- latestResult?.classList.add('hidden');
- if(latestMessage)latestMessage.textContent='';
- setLatestState('未確認');
  if(shouldAutoLoadJson())setTimeout(()=>loadSharedJson({silent:true}),250);
- if(shouldAutoCheck())setTimeout(()=>checkLatestResult({silent:true}),700);
 }
 document.querySelectorAll('.gameBtn').forEach(b=>b.onclick=()=>{currentGame=b.dataset.game;store.set('lottery_current_game',currentGame);loadGame()});
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
@@ -379,51 +413,6 @@ function renderRules(){
 }
 const enabled=id=>rules.find(r=>r.id===id)?.on;
 
-let pendingLatestDraw=null;
-function setLatestState(text,type=''){
- if(!latestState)return;
- latestState.textContent=text;
- latestState.className=`updateState ${type}`.trim();
-}
-function formatDateJP(value){
- const m=String(value||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
- return m?`${m[1]}年${Number(m[2])}月${Number(m[3])}日`:(value||'-');
-}
-function latestEndpoint(){
- return `/.netlify/functions/latest-loto?game=${encodeURIComponent(currentGame)}&_=${Date.now()}`;
-}
-async function checkLatestResult({silent=false}={}){
- pendingLatestDraw=null;
- latestResult.classList.add('hidden');
- latestResult.innerHTML='';
- checkLatestBtn.disabled=true;
- setLatestState('確認中','loading');
- latestMessage.textContent='公式ページを確認しています…';
- try{
-  const response=await fetch(latestEndpoint(),{cache:'no-store',headers:{Accept:'application/json'}});
-  let data=null;try{data=await response.json()}catch(_){}
-  if(!response.ok||!data?.ok||!data?.result)throw new Error(data?.error||`Function応答エラー（${response.status}）`);
-  const r=data.result;
-  if(!Array.isArray(r.mainNumbers)||r.mainNumbers.length!==cfg().picks)throw new Error('取得した本数字の個数が正しくありません');
-  pendingLatestDraw={round:Number(r.drawNumber),date:r.date,nums:r.mainNumbers.map(Number).sort((a,b)=>a-b),bonuses:(r.bonusNumbers||[]).map(Number)};
-  const localLatest=draws.at(-1),exists=draws.some(d=>Number(d.round)===pendingLatestDraw.round);
-  const isNew=!exists&&(!localLatest||pendingLatestDraw.round>Number(localLatest.round));
-  setLatestState(isNew?'新着あり':exists?'登録済み':'確認完了','success');
-  latestMessage.innerHTML=isNew?`<span class="ok">第${pendingLatestDraw.round}回の新しい結果が見つかりました。</span>`:exists?`第${pendingLatestDraw.round}回はすでに登録されています。`:`第${pendingLatestDraw.round}回を確認しました。`;
-  latestResult.classList.remove('hidden');
-  latestResult.innerHTML=`<div class="ticketHead"><b>${cfg().name} 第${pendingLatestDraw.round}回</b><span class="score">${formatDateJP(pendingLatestDraw.date)}</span></div><div class="mini">本数字</div><div class="balls">${pendingLatestDraw.nums.map(n=>`<span class="ball">${String(n).padStart(2,'0')}</span>`).join('')}</div><div class="mini">ボーナス：${pendingLatestDraw.bonuses.length?pendingLatestDraw.bonuses.map(n=>String(n).padStart(2,'0')).join('・'):'なし'}</div><div class="updateMeta"><span>データ元：みずほ銀行</span><span>重複は自動除外</span></div><div class="updateActions"><button id="importLatestBtn" class="primary" ${exists?'disabled':''}>${exists?'登録済み':'この結果を取り込む'}</button><button id="hideLatestBtn">閉じる</button></div>`;
-  const importBtn=$('importLatestBtn');
-  if(importBtn&&!exists)importBtn.onclick=()=>{saveDraws([pendingLatestDraw]);setLatestState('取込完了','success');latestMessage.innerHTML=`<span class="ok">第${pendingLatestDraw.round}回を追加しました。</span>`;importBtn.disabled=true;importBtn.textContent='取込済み';};
-  $('hideLatestBtn').onclick=()=>latestResult.classList.add('hidden');
-  store.set(`latest_check_${currentGame}`,String(Date.now()));
- }catch(err){
-  console.error(err);setLatestState('取得失敗','error');
-  latestMessage.innerHTML=`<span class="red">最新結果を取得できませんでした。</span><br>${String(err.message||err)}<br><span class="mini">CSV読込と手入力は引き続き利用できます。</span>`;
-  if(!silent)latestResult.classList.add('hidden');
- }finally{checkLatestBtn.disabled=false}
-}
-checkLatestBtn?.addEventListener('click',()=>checkLatestResult());
-function shouldAutoCheck(){const last=Number(store.get(`latest_check_${currentGame}`)||0);return Date.now()-last>6*60*60*1000}
 
 
 let sharedJsonData=null;
@@ -486,9 +475,100 @@ function parseCSV(text){
  });
  return out.sort((a,b)=>a.round-b.round);
 }
+
+const AI_NAMES=['堅実AI','標準AI','川重視AI','空き重視AI','一発AI'];
+
+function getPredictionHistory(){
+ try{return JSON.parse(store.get(key('history'))||'[]')}catch(_){return[]}
+}
+function setPredictionHistory(history){
+ store.set(key('history'),JSON.stringify(history.slice(0,60)));
+}
+function normalizeAiEntries(record){
+ if(Array.isArray(record.aiEntries))return record.aiEntries;
+ if(Array.isArray(record.tickets)){
+  return record.tickets.map((numbers,i)=>({
+   ai:AI_NAMES[i]||`AI ${i+1}`,
+   numbers,
+   hit:record.hits?.[i]??null,
+   resultRound:record.resultRound??null
+  }));
+ }
+ return [];
+}
+function scorePredictionHistory(){
+ const history=getPredictionHistory();
+ let changed=false;
+ history.forEach(record=>{
+  const entries=normalizeAiEntries(record);
+  if(!entries.length)return;
+  const result=draws.find(d=>Number(d.round)>Number(record.round||0));
+  if(!result)return;
+  entries.forEach(entry=>{
+   if(entry.hit==null){
+    entry.hit=entry.numbers.filter(n=>result.nums.includes(n)).length;
+    entry.resultRound=result.round;
+    changed=true;
+   }
+  });
+  record.aiEntries=entries;
+  record.resultRound=result.round;
+ });
+ if(changed)setPredictionHistory(history);
+ return history;
+}
+function leagueStats(){
+ const history=scorePredictionHistory();
+ const stats={};
+ AI_NAMES.forEach(name=>stats[name]={name,plays:0,total:0,best:0,wins:0});
+ history.forEach(record=>{
+  const scored=normalizeAiEntries(record).filter(x=>x.hit!=null);
+  if(!scored.length)return;
+  const max=Math.max(...scored.map(x=>x.hit));
+  scored.forEach(entry=>{
+   if(!stats[entry.ai])stats[entry.ai]={name:entry.ai,plays:0,total:0,best:0,wins:0};
+   const s=stats[entry.ai];
+   s.plays++;s.total+=entry.hit;s.best=Math.max(s.best,entry.hit);
+   if(entry.hit===max)s.wins++;
+  });
+ });
+ return Object.values(stats).map(s=>({...s,avg:s.plays?s.total/s.plays:0}))
+   .sort((a,b)=>b.avg-a.avg||b.best-a.best||b.wins-a.wins);
+}
+function renderLeague(){
+ if(!leagueList)return;
+ const ranking=leagueStats();
+ const totalPlays=ranking.reduce((a,x)=>a+x.plays,0);
+ const top=ranking.find(x=>x.plays>0);
+ leagueScored.textContent=totalPlays;
+ leagueBest.textContent=top?top.name.replace('AI',''):'-';
+ leagueTopHit.textContent=ranking.reduce((m,x)=>Math.max(m,x.best),0);
+ leagueList.innerHTML=ranking.map((x,i)=>`
+  <div class="leagueRow">
+   <div class="leagueRank">${i+1}</div>
+   <div><b>${x.name}</b><div class="leagueMeta">${x.plays?`平均 ${x.avg.toFixed(2)}個一致・${x.plays}回採点・週優勝${x.wins}回`:'まだ採点データなし'}</div></div>
+   <span class="hitBadge">最高 ${x.best}</span>
+  </div>`).join('');
+}
+function exportAiHistory(){
+ const payload={
+  version:'1.0',
+  exportedAt:new Date().toISOString(),
+  game:currentGame,
+  history:getPredictionHistory(),
+  ranking:leagueStats()
+ };
+ const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(blob);
+ a.download=`loto-no-me-ai-${currentGame}-${new Date().toISOString().slice(0,10)}.json`;
+ a.click();URL.revokeObjectURL(a.href);
+}
+exportAiBtn?.addEventListener('click',exportAiHistory);
+
 function saveDraws(next){
  const map=new Map(draws.map(d=>[d.round,d]));next.forEach(d=>map.set(d.round,d));draws=[...map.values()].sort((a,b)=>a.round-b.round);
- store.set(key('draws'),JSON.stringify(draws));dataMessage.innerHTML=`<span class="ok">${next.length}件読み込み・合計${draws.length}件</span>`;renderAnalysis();renderRiver();renderEye();
+ store.set(key('draws'),JSON.stringify(draws));dataMessage.innerHTML=`<span class="ok">${next.length}件読み込み・合計${draws.length}件</span>`;scorePredictionHistory();renderAnalysis();renderRiver();renderEye();renderHistory();renderLeague();
 }
 importTextBtn.addEventListener('click',()=>saveDraws(parseCSV(csvText.value)));
 loadSampleBtn.addEventListener('click',()=>saveDraws(parseCSV(SAMPLES[currentGame])));
@@ -608,7 +688,7 @@ function showNumberCard(n){
  const reasonText=row?.reasons.length?row.reasons.join('・'):'総合バランス';
  const comment=comp.hot>=24&&comp.river>=14?`${String(n).padStart(2,'0')}は出現頻度と川の流れが同時に強い数字です。軸候補として観察価値があります。`:comp.gap>=12?`${String(n).padStart(2,'0')}は空き回数が長めです。反発候補として注目されますが、空きだけでの判断は禁物です。`:comp.pm11?`直近数字との±11関係が成立しています。ほかの条件と組み合わせて使う数字です。`:`突出した一条件ではなく、複数項目の合計で評価されています。組み合わせ全体のバランス向きです。`;
  const breakdown=[['基礎',comp.base],['ホット',comp.hot],['空き',comp.gap],['川',comp.river],['引っ張り',comp.carry],['±11',comp.pm11]];
- numberCardBody.innerHTML=`<div class="eyebrow">NUMBER PROFILE β0.8</div><div class="profileHero"><div class="profileBall">${String(n).padStart(2,'0')}</div><div><h2 class="profileTitle">数字カルテ</h2><div class="notice">${cfg().name}・${ds.length}回分で分析</div><div class="trendChips"><span class="chip">評価 <strong>${grade}</strong></span><span class="chip">スコア <strong>${row?.score||0}</strong></span><span class="chip">空き <strong>${gap}回</strong></span></div></div></div><button id="favoriteToggle" class="favBtn ${fav?'on':''}">${fav?'★ お気に入り登録済み':'☆ お気に入りに追加'}</button><div class="grid3"><div class="stat"><b>${s.freq[n]}回</b><span>期間内出現</span></div><div class="stat"><b>${hot}%</b><span>ホット度</span></div><div class="stat"><b>${river}%</b><span>川評価</span></div></div><h3>分析スコア内訳</h3><div class="breakdown">${breakdown.map(([name,val])=>`<div class="breakRow"><span>${name}</span><div class="bar"><div class="fill" style="width:${Math.min(100,val/34*100)}%"></div></div><strong>+${val}</strong></div>`).join('')}<div class="ticketHead" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><b>合計</b><span class="score">${row?.score||comp.total}点</span></div></div><h3>期間別の出現</h3><div class="periodGrid">${periods.map(x=>`<div class="periodBox"><b>${x.hits}回</b><span>${x.label} / ${x.rate.toFixed(1)}%</span></div>`).join('')}</div><div class="miniChart">${periods.map(x=>`<div class="miniChartCol"><div class="miniChartBar" style="height:${Math.max(3,x.rate/maxRate*74)}px"></div><small>${x.label}</small></div>`).join('')}</div><h3>AIコメント</h3><div class="aiNote">${comment}<br><span class="mini">評価根拠：${reasonText}</span></div><h3>一緒に出やすい数字 TOP5</h3><div class="balls">${pairTop.length?pairTop.map(([x,c])=>`<span class="ball pairBall clickable" data-num="${x}">${String(x).padStart(2,'0')}<i class="pairCount">${c}</i></span>`).join(''):'<span class="notice">データ不足</span>'}</div>`;
+ numberCardBody.innerHTML=`<div class="eyebrow">NUMBER PROFILE β0.9</div><div class="profileHero"><div class="profileBall">${String(n).padStart(2,'0')}</div><div><h2 class="profileTitle">数字カルテ</h2><div class="notice">${cfg().name}・${ds.length}回分で分析</div><div class="trendChips"><span class="chip">評価 <strong>${grade}</strong></span><span class="chip">スコア <strong>${row?.score||0}</strong></span><span class="chip">空き <strong>${gap}回</strong></span></div></div></div><button id="favoriteToggle" class="favBtn ${fav?'on':''}">${fav?'★ お気に入り登録済み':'☆ お気に入りに追加'}</button><div class="grid3"><div class="stat"><b>${s.freq[n]}回</b><span>期間内出現</span></div><div class="stat"><b>${hot}%</b><span>ホット度</span></div><div class="stat"><b>${river}%</b><span>川評価</span></div></div><h3>分析スコア内訳</h3><div class="breakdown">${breakdown.map(([name,val])=>`<div class="breakRow"><span>${name}</span><div class="bar"><div class="fill" style="width:${Math.min(100,val/34*100)}%"></div></div><strong>+${val}</strong></div>`).join('')}<div class="ticketHead" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><b>合計</b><span class="score">${row?.score||comp.total}点</span></div></div><h3>期間別の出現</h3><div class="periodGrid">${periods.map(x=>`<div class="periodBox"><b>${x.hits}回</b><span>${x.label} / ${x.rate.toFixed(1)}%</span></div>`).join('')}</div><div class="miniChart">${periods.map(x=>`<div class="miniChartCol"><div class="miniChartBar" style="height:${Math.max(3,x.rate/maxRate*74)}px"></div><small>${x.label}</small></div>`).join('')}</div><h3>AIコメント</h3><div class="aiNote">${comment}<br><span class="mini">評価根拠：${reasonText}</span></div><h3>一緒に出やすい数字 TOP5</h3><div class="balls">${pairTop.length?pairTop.map(([x,c])=>`<span class="ball pairBall clickable" data-num="${x}">${String(x).padStart(2,'0')}<i class="pairCount">${c}</i></span>`).join(''):'<span class="notice">データ不足</span>'}</div>`;
  numberModal.classList.add('showModal');$('favoriteToggle').onclick=()=>toggleFavorite(n);bindNumberClicks()
 }
 closeModal.onclick=()=>numberModal.classList.remove('showModal');numberModal.onclick=e=>{if(e.target===numberModal)numberModal.classList.remove('showModal')};analysisWindow?.addEventListener('change',()=>{renderAnalysis();renderEye()});eyeWindow?.addEventListener('change',renderEye);
@@ -675,7 +755,13 @@ function generateFiveAI(){
    const average=Math.round(sets.reduce((a,x)=>a+x.score,0)/sets.length);
    fiveAiOutput.innerHTML=`<div class="aiSummary"><div class="stat"><b>${sets.length}口</b><span>生成数</span></div><div class="stat"><b>${uniqueNums.size}</b><span>使用数字</span></div><div class="stat"><b>${average}</b><span>平均スコア</span></div></div><div class="aiFiveGrid">${sets.map((x,i)=>`<div class="aiFiveCard ${x.cssClass}"><div class="ticketHead"><b>${x.emoji} ${x.label}</b><span class="score">${Math.min(99,Math.round(60+x.score/7))}%</span></div><div class="balls">${x.nums.map(n=>`<span class="ball">${String(n).padStart(2,'0')}</span>`).join('')}</div><div class="aiReason">${x.reasons.slice(0,5).join('・')}</div></div>`).join('')}</div>`;
    const h=JSON.parse(store.get(key('history'))||'[]');
-   h.unshift({at:new Date().toLocaleString('ja-JP'),round:draws.at(-1)?.round||0,mode:'5タイプAI',tickets:sets.map(x=>x.nums)});
+   h.unshift({
+    at:new Date().toLocaleString('ja-JP'),
+    round:draws.at(-1)?.round||0,
+    mode:'5タイプAI',
+    tickets:sets.map(x=>x.nums),
+    aiEntries:sets.map(x=>({ai:x.label,numbers:x.nums,score:x.score,hit:null,resultRound:null}))
+   });
    store.set(key('history'),JSON.stringify(h.slice(0,30)));
   }
   generateFiveAiBtn.disabled=false;
@@ -708,8 +794,15 @@ generateBtn.onclick=()=>{
  const arr=[...found.values()].sort((a,b)=>b.score-a.score).slice(0,count);predictionOutput.classList.remove('hidden');predictionOutput.innerHTML=`<h2>${c.name} 今回の候補</h2>${arr.map((t,i)=>`<div class="ticket"><div class="ticketHead"><b>候補 ${i+1}</b><span class="score">${t.score.toFixed(1)} pt</span></div><div class="balls">${t.nums.map(n=>`<span class="ball">${String(n).padStart(2,'0')}</span>`).join('')}</div><div class="mini" style="margin-top:8px">${t.reasons.join('・')}</div></div>`).join('')||'<p class="notice">条件が厳しすぎます。ルールを1〜2個オフにして再実行してください。</p>'}`;
  if(arr.length){const h=JSON.parse(store.get(key('history'))||'[]');h.unshift({at:new Date().toLocaleString('ja-JP'),round:draws.at(-1).round,tickets:arr.map(x=>x.nums)});store.set(key('history'),JSON.stringify(h.slice(0,30)))}
 };
-function renderHistory(){const h=JSON.parse(store.get(key('history'))||'[]');historyList.innerHTML=h.length?h.map(x=>`<div class="ticket"><b>${x.at}</b><div class="mini">${cfg().name}・第${x.round}回まで${x.mode?'・'+x.mode:''}</div>${x.tickets.map(t=>`<div style="margin-top:6px">${t.map(n=>String(n).padStart(2,'0')).join(' - ')}</div>`).join('')}</div>`).join(''):'<p class="notice">まだ履歴はありません。</p>'}
-clearHistoryBtn.onclick=()=>{store.remove(key('history'));renderHistory()};
+function renderHistory(){
+ const h=scorePredictionHistory();
+ historyList.innerHTML=h.length?h.map(x=>{
+  const entries=normalizeAiEntries(x);
+  return `<div class="ticket"><b>${x.at}</b><div class="mini">${cfg().name}・第${x.round}回まで${x.mode?'・'+x.mode:''}${x.resultRound?' → 第'+x.resultRound+'回で採点':''}</div>${entries.map(t=>`<div style="margin-top:8px"><b style="font-size:11px">${t.ai}</b><div>${t.numbers.map(n=>String(n).padStart(2,'0')).join(' - ')}</div>${t.hit!=null?`<div class="historyScore"><span>${t.hit}個一致</span><span>第${t.resultRound}回</span></div>`:'<div class="mini">次回結果待ち</div>'}</div>`).join('')}</div>`;
+ }).join(''):'<p class="notice">まだ履歴はありません。</p>';
+ renderLeague();
+}
+clearHistoryBtn.onclick=()=>{if(confirm('AI予想履歴を削除する？')){store.remove(key('history'));renderHistory();renderLeague()}};
 riverWindow.addEventListener('change',renderRiver);
 try{
  loadGame();
