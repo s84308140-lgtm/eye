@@ -1,0 +1,13 @@
+ロトの目 β1.0
+
+追加:
+- ロト6全2,124回分をlotodata.jsonへ内蔵
+- Shift_JIS / UTF-8 CSVの自動判定
+- KYO's LOTO形式などの列名自動判定
+- 新しい回だけ自動統合
+- 更新済みlotodata.jsonのワンタップ保存
+- AIリーグ・自動採点を継続搭載
+
+注意:
+GitHub Pages上のファイルをブラウザから直接上書きすることはできません。
+更新済みJSONを保存し、GitHubのlotodata.jsonへ上書きすると全利用者へ反映されます。
