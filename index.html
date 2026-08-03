@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0e14"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg">
-<title>ロトの目 β0.6｜最新結果チェック</title>
+<title>ロトの目 β0.7｜5口AI予想</title>
 <style>
 :root{--bg:#080a0f;--panel:#121722;--line:#2a3346;--text:#f4f6fb;--muted:#98a3b8;--accent:#d9ff43;--blue:#6aa9ff;--gold:#ffd55c;--violet:#a98bff}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% -10%,#1d2432 0,#080a0f 45%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
@@ -40,6 +40,22 @@ label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}select,in
 .updateMeta{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px}
 .updateMeta span{font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 8px}
 
+
+.aiFiveGrid{display:grid;gap:10px}
+.aiFiveCard{background:#0b0e14;border:1px solid var(--line);border-radius:15px;padding:13px}
+.aiFiveCard.safe{border-color:#3b745c}
+.aiFiveCard.standard{border-color:#7c6a34}
+.aiFiveCard.river{border-color:#41668c}
+.aiFiveCard.cold{border-color:#65558b}
+.aiFiveCard.attack{border-color:#814655}
+.aiTag{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:10px;color:var(--muted)}
+.aiReason{margin-top:8px;color:var(--muted);font-size:11px;line-height:1.55}
+.quickActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.quickBox{margin-top:10px;padding:12px;border:1px dashed var(--line);border-radius:14px;background:#090c12}
+.aiSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 0}
+.aiSummary .stat b{font-size:17px}
+@media(min-width:720px){.aiFiveGrid{grid-template-columns:1fr 1fr}.aiFiveCard:first-child{grid-column:1/-1}}
+
 </style>
 </head>
 <body>
@@ -51,8 +67,8 @@ label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}select,in
 </header>
 
 <div class="card" style="border-color:#53617a">
-  <div class="notice"><b style="color:#f4f6fb">β0.6｜最新結果チェック</b><br>
-  公式ページの最新結果を確認し、ワンタップで端末へ追加できるようになりました。
+  <div class="notice"><b style="color:#f4f6fb">β0.7｜5口AI予想</b><br>
+  5タイプAI予想・完全クイックピック・バランスクイックを追加しました。
   </div>
 </div>
 
@@ -81,7 +97,7 @@ label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}select,in
 <div class="eyebrow">WEEKLY FOCUS</div>
 <h2 style="font-size:22px;margin-top:6px">👁 今回のロトの目</h2>
 <div class="sectionTitleRow"><div id="eyeStatus" class="notice"></div><select id="eyeWindow"><option value="10">直近10回</option><option value="30" selected>直近30回</option><option value="100">直近100回</option><option value="0">全期間</option></select></div>
-<div class="eyeHero"><div id="eyeScoreRing" class="scoreRing"><div class="scoreRingInner"><b id="eyeScoreValue">--</b><span>総合注目度</span></div></div><div class="heroCopy"><span class="versionPill">LIVE ANALYSIS β0.6</span><h3 id="eyeHeadline">データ待機中</h3><p id="eyeHeroText" class="notice">当選データを読み込むと分析が始まります。</p><div id="eyeChips" class="trendChips"></div></div></div>
+<div class="eyeHero"><div id="eyeScoreRing" class="scoreRing"><div class="scoreRingInner"><b id="eyeScoreValue">--</b><span>総合注目度</span></div></div><div class="heroCopy"><span class="versionPill">LIVE ANALYSIS β0.7</span><h3 id="eyeHeadline">データ待機中</h3><p id="eyeHeroText" class="notice">当選データを読み込むと分析が始まります。</p><div id="eyeChips" class="trendChips"></div></div></div>
 <div id="eyeTop" class="focusGrid"></div>
 <div id="eyeComment" class="stat"></div><div id="eyeMetrics" class="card" style="margin:12px 0 0"></div>
 <button id="eyeGenerateBtn" class="primary" style="width:100%;margin-top:14px">3タイプAIを生成</button>
@@ -104,6 +120,20 @@ label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}select,in
 <div id="ruleSwitches"></div>
 <button id="generateBtn" class="primary" style="width:100%;margin-top:14px">予想を生成</button>
 </div>
+
+<div class="card" style="border-color:#5f6541">
+  <div class="eyebrow">AI FIVE PICKS</div>
+  <h2 style="margin-top:5px">🤖 5タイプAI予想</h2>
+  <p class="notice">堅実・標準・川重視・空き重視・一発型を同時に生成します。</p>
+  <button id="generateFiveAiBtn" class="primary" style="width:100%">5口AI予想を生成</button>
+  <div class="quickActions">
+    <button id="quickPickBtn">🎲 完全クイック</button>
+    <button id="balancedQuickBtn">⚖ バランスクイック</button>
+  </div>
+  <div id="quickOutput" class="quickBox hidden"></div>
+  <div id="fiveAiOutput" class="hidden" style="margin-top:12px"></div>
+</div>
+
 <div id="predictionOutput" class="card hidden"></div>
 </section>
 
@@ -208,6 +238,13 @@ const latestState=$('latestState');
 const checkLatestBtn=$('checkLatestBtn');
 const latestMessage=$('latestMessage');
 const latestResult=$('latestResult');
+
+const generateFiveAiBtn=$('generateFiveAiBtn');
+const quickPickBtn=$('quickPickBtn');
+const balancedQuickBtn=$('balancedQuickBtn');
+const quickOutput=$('quickOutput');
+const fiveAiOutput=$('fiveAiOutput');
+
 
 const eyeStatus=$('eyeStatus');
 const eyeTop=$('eyeTop');
@@ -483,12 +520,82 @@ function showNumberCard(n){
  const reasonText=row?.reasons.length?row.reasons.join('・'):'総合バランス';
  const comment=comp.hot>=24&&comp.river>=14?`${String(n).padStart(2,'0')}は出現頻度と川の流れが同時に強い数字です。軸候補として観察価値があります。`:comp.gap>=12?`${String(n).padStart(2,'0')}は空き回数が長めです。反発候補として注目されますが、空きだけでの判断は禁物です。`:comp.pm11?`直近数字との±11関係が成立しています。ほかの条件と組み合わせて使う数字です。`:`突出した一条件ではなく、複数項目の合計で評価されています。組み合わせ全体のバランス向きです。`;
  const breakdown=[['基礎',comp.base],['ホット',comp.hot],['空き',comp.gap],['川',comp.river],['引っ張り',comp.carry],['±11',comp.pm11]];
- numberCardBody.innerHTML=`<div class="eyebrow">NUMBER PROFILE β0.6</div><div class="profileHero"><div class="profileBall">${String(n).padStart(2,'0')}</div><div><h2 class="profileTitle">数字カルテ</h2><div class="notice">${cfg().name}・${ds.length}回分で分析</div><div class="trendChips"><span class="chip">評価 <strong>${grade}</strong></span><span class="chip">スコア <strong>${row?.score||0}</strong></span><span class="chip">空き <strong>${gap}回</strong></span></div></div></div><button id="favoriteToggle" class="favBtn ${fav?'on':''}">${fav?'★ お気に入り登録済み':'☆ お気に入りに追加'}</button><div class="grid3"><div class="stat"><b>${s.freq[n]}回</b><span>期間内出現</span></div><div class="stat"><b>${hot}%</b><span>ホット度</span></div><div class="stat"><b>${river}%</b><span>川評価</span></div></div><h3>分析スコア内訳</h3><div class="breakdown">${breakdown.map(([name,val])=>`<div class="breakRow"><span>${name}</span><div class="bar"><div class="fill" style="width:${Math.min(100,val/34*100)}%"></div></div><strong>+${val}</strong></div>`).join('')}<div class="ticketHead" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><b>合計</b><span class="score">${row?.score||comp.total}点</span></div></div><h3>期間別の出現</h3><div class="periodGrid">${periods.map(x=>`<div class="periodBox"><b>${x.hits}回</b><span>${x.label} / ${x.rate.toFixed(1)}%</span></div>`).join('')}</div><div class="miniChart">${periods.map(x=>`<div class="miniChartCol"><div class="miniChartBar" style="height:${Math.max(3,x.rate/maxRate*74)}px"></div><small>${x.label}</small></div>`).join('')}</div><h3>AIコメント</h3><div class="aiNote">${comment}<br><span class="mini">評価根拠：${reasonText}</span></div><h3>一緒に出やすい数字 TOP5</h3><div class="balls">${pairTop.length?pairTop.map(([x,c])=>`<span class="ball pairBall clickable" data-num="${x}">${String(x).padStart(2,'0')}<i class="pairCount">${c}</i></span>`).join(''):'<span class="notice">データ不足</span>'}</div>`;
+ numberCardBody.innerHTML=`<div class="eyebrow">NUMBER PROFILE β0.7</div><div class="profileHero"><div class="profileBall">${String(n).padStart(2,'0')}</div><div><h2 class="profileTitle">数字カルテ</h2><div class="notice">${cfg().name}・${ds.length}回分で分析</div><div class="trendChips"><span class="chip">評価 <strong>${grade}</strong></span><span class="chip">スコア <strong>${row?.score||0}</strong></span><span class="chip">空き <strong>${gap}回</strong></span></div></div></div><button id="favoriteToggle" class="favBtn ${fav?'on':''}">${fav?'★ お気に入り登録済み':'☆ お気に入りに追加'}</button><div class="grid3"><div class="stat"><b>${s.freq[n]}回</b><span>期間内出現</span></div><div class="stat"><b>${hot}%</b><span>ホット度</span></div><div class="stat"><b>${river}%</b><span>川評価</span></div></div><h3>分析スコア内訳</h3><div class="breakdown">${breakdown.map(([name,val])=>`<div class="breakRow"><span>${name}</span><div class="bar"><div class="fill" style="width:${Math.min(100,val/34*100)}%"></div></div><strong>+${val}</strong></div>`).join('')}<div class="ticketHead" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><b>合計</b><span class="score">${row?.score||comp.total}点</span></div></div><h3>期間別の出現</h3><div class="periodGrid">${periods.map(x=>`<div class="periodBox"><b>${x.hits}回</b><span>${x.label} / ${x.rate.toFixed(1)}%</span></div>`).join('')}</div><div class="miniChart">${periods.map(x=>`<div class="miniChartCol"><div class="miniChartBar" style="height:${Math.max(3,x.rate/maxRate*74)}px"></div><small>${x.label}</small></div>`).join('')}</div><h3>AIコメント</h3><div class="aiNote">${comment}<br><span class="mini">評価根拠：${reasonText}</span></div><h3>一緒に出やすい数字 TOP5</h3><div class="balls">${pairTop.length?pairTop.map(([x,c])=>`<span class="ball pairBall clickable" data-num="${x}">${String(x).padStart(2,'0')}<i class="pairCount">${c}</i></span>`).join(''):'<span class="notice">データ不足</span>'}</div>`;
  numberModal.classList.add('showModal');$('favoriteToggle').onclick=()=>toggleFavorite(n);bindNumberClicks()
 }
 closeModal.onclick=()=>numberModal.classList.remove('showModal');numberModal.onclick=e=>{if(e.target===numberModal)numberModal.classList.remove('showModal')};analysisWindow?.addEventListener('change',()=>{renderAnalysis();renderEye()});eyeWindow?.addEventListener('change',renderEye);
 
 eyeGenerateBtn.addEventListener('click',generateThreeAI);
+
+function randomUniqueSet(max,picks){
+ const nums=[];
+ while(nums.length<picks){
+  const n=1+Math.floor(Math.random()*max);
+  if(!nums.includes(n))nums.push(n);
+ }
+ return nums.sort((a,b)=>a-b);
+}
+function balancedQuickSet(){
+ const c=cfg(),targetOdd=c.odd[Math.floor(Math.random()*c.odd.length)];
+ for(let tries=0;tries<20000;tries++){
+  const nums=randomUniqueSet(c.max,c.picks);
+  const odd=nums.filter(n=>n%2).length;
+  const low=nums.filter(n=>n<=c.low).length;
+  const sum=nums.reduce((a,b)=>a+b,0);
+  const cons=nums.filter((n,i)=>i&&n-nums[i-1]===1).length;
+  if(odd===targetOdd&&c.lowCounts.includes(low)&&sum>=c.sum[0]&&sum<=c.sum[1]&&cons<=1)return nums;
+ }
+ return randomUniqueSet(c.max,c.picks);
+}
+function showQuick(nums,label){
+ quickOutput.classList.remove('hidden');
+ quickOutput.innerHTML=`<div class="ticketHead"><b>${label}</b><span class="aiTag">運試し</span></div><div class="balls">${nums.map(n=>`<span class="ball">${String(n).padStart(2,'0')}</span>`).join('')}</div><div class="mini" style="margin-top:8px">${label==='完全クイックピック'?'条件を付けない完全ランダムです。':'奇偶・高低・合計値だけ整えたランダムです。'}</div>`;
+}
+quickPickBtn?.addEventListener('click',()=>showQuick(randomUniqueSet(cfg().max,cfg().picks),'完全クイックピック'));
+balancedQuickBtn?.addEventListener('click',()=>showQuick(balancedQuickSet(),'バランスクイックピック'));
+
+function generateBestForStyle(styleName,label,emoji,cssClass){
+ const ds=dataset(),c=cfg(),s=stats(ds),found=new Map();
+ if(ds.length<2)return null;
+ for(let i=0;i<120000&&found.size<120;i++){
+  const nums=randomUniqueSet(c.max,c.picks);
+  const ev=evaluate(nums,ds,s,styleName);
+  if(ev)found.set(nums.join('-'),{nums,...ev});
+ }
+ const best=[...found.values()].sort((a,b)=>b.score-a.score)[0];
+ if(!best)return null;
+ return {...best,label,emoji,styleName,cssClass};
+}
+function generateFiveAI(){
+ if(dataset().length<2){alert('当選データを2回分以上読み込んでな');return}
+ generateFiveAiBtn.disabled=true;
+ generateFiveAiBtn.textContent='分析中…';
+ setTimeout(()=>{
+  const defs=[
+   ['total','堅実AI','🟢','safe'],
+   ['balanced','標準AI','🟡','standard'],
+   ['river','川重視AI','🔵','river'],
+   ['cold','空き重視AI','🟣','cold'],
+   ['hot','一発AI','🔴','attack']
+  ];
+  const sets=defs.map(d=>generateBestForStyle(...d)).filter(Boolean);
+  fiveAiOutput.classList.remove('hidden');
+  if(!sets.length){
+   fiveAiOutput.innerHTML='<p class="notice">条件が厳しすぎます。ルールを1〜2個オフにしてください。</p>';
+  }else{
+   const uniqueNums=new Set(sets.flatMap(x=>x.nums));
+   const average=Math.round(sets.reduce((a,x)=>a+x.score,0)/sets.length);
+   fiveAiOutput.innerHTML=`<div class="aiSummary"><div class="stat"><b>${sets.length}口</b><span>生成数</span></div><div class="stat"><b>${uniqueNums.size}</b><span>使用数字</span></div><div class="stat"><b>${average}</b><span>平均スコア</span></div></div><div class="aiFiveGrid">${sets.map((x,i)=>`<div class="aiFiveCard ${x.cssClass}"><div class="ticketHead"><b>${x.emoji} ${x.label}</b><span class="score">${Math.min(99,Math.round(60+x.score/7))}%</span></div><div class="balls">${x.nums.map(n=>`<span class="ball">${String(n).padStart(2,'0')}</span>`).join('')}</div><div class="aiReason">${x.reasons.slice(0,5).join('・')}</div></div>`).join('')}</div>`;
+   const h=JSON.parse(store.get(key('history'))||'[]');
+   h.unshift({at:new Date().toLocaleString('ja-JP'),round:draws.at(-1)?.round||0,mode:'5タイプAI',tickets:sets.map(x=>x.nums)});
+   store.set(key('history'),JSON.stringify(h.slice(0,30)));
+  }
+  generateFiveAiBtn.disabled=false;
+  generateFiveAiBtn.textContent='5口AI予想を生成';
+ },30);
+}
+generateFiveAiBtn?.addEventListener('click',generateFiveAI);
+
 function evaluate(nums,ds,s,style){
  const c=cfg(),latest=ds.at(-1),prev=ds.at(-2),river=riverScores(ds);let score=0,reasons=[];
  const maxF=Math.max(...s.freq,1),maxG=Math.max(...s.gap,1);
