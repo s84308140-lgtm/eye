@@ -83,6 +83,13 @@ label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}select,in
 .csvAutoResult{margin-top:10px;padding:12px;border:1px solid var(--line);border-radius:14px;background:#090c12}
 .csvAutoResult strong{color:var(--lime)}
 
+
+.autoUpdatePanel{border-color:#3d6b59;background:linear-gradient(145deg,#13251e,#101713)}
+.autoUpdateGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
+.autoUpdateGrid .stat b{font-size:16px}
+.autoSource{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.autoSource span{font-size:10px;border:1px solid var(--line);border-radius:999px;padding:5px 8px;color:var(--muted)}
+
 </style>
 </head>
 <body>
@@ -94,8 +101,8 @@ label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}select,in
 </header>
 
 <div class="card" style="border-color:#53617a">
-  <div class="notice"><b style="color:#f4f6fb">β1.0｜CSVワンタップ更新</b><br>
-  ロト6の全2,124回分を内蔵。CSVを選ぶだけで新しい回を追加し、更新済みJSONを書き出せます。
+  <div class="notice"><b style="color:#f4f6fb">β1.1｜自動データ更新</b><br>
+  GitHub Actionsが毎晩最新結果を確認。ロト6・ロト7・ミニロトを自動更新します。
   </div>
 </div>
 
@@ -124,7 +131,7 @@ label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}select,in
 <div class="eyebrow">WEEKLY FOCUS</div>
 <h2 style="font-size:22px;margin-top:6px">👁 今回のロトの目</h2>
 <div class="sectionTitleRow"><div id="eyeStatus" class="notice"></div><select id="eyeWindow"><option value="10">直近10回</option><option value="30" selected>直近30回</option><option value="100">直近100回</option><option value="0">全期間</option></select></div>
-<div class="eyeHero"><div id="eyeScoreRing" class="scoreRing"><div class="scoreRingInner"><b id="eyeScoreValue">--</b><span>総合注目度</span></div></div><div class="heroCopy"><span class="versionPill">LIVE ANALYSIS β1.0</span><h3 id="eyeHeadline">データ待機中</h3><p id="eyeHeroText" class="notice">当選データを読み込むと分析が始まります。</p><div id="eyeChips" class="trendChips"></div></div></div>
+<div class="eyeHero"><div id="eyeScoreRing" class="scoreRing"><div class="scoreRingInner"><b id="eyeScoreValue">--</b><span>総合注目度</span></div></div><div class="heroCopy"><span class="versionPill">LIVE ANALYSIS β1.1</span><h3 id="eyeHeadline">データ待機中</h3><p id="eyeHeroText" class="notice">当選データを読み込むと分析が始まります。</p><div id="eyeChips" class="trendChips"></div></div></div>
 <div id="eyeTop" class="focusGrid"></div>
 <div id="eyeComment" class="stat"></div><div id="eyeMetrics" class="card" style="margin:12px 0 0"></div>
 <button id="eyeGenerateBtn" class="primary" style="width:100%;margin-top:14px">3タイプAIを生成</button>
@@ -189,6 +196,28 @@ label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}select,in
 </section>
 
 <section id="data">
+
+<div class="card autoUpdatePanel">
+  <div class="ticketHead">
+    <div>
+      <div class="eyebrow">AUTO DATA UPDATE</div>
+      <h2 style="margin-top:5px">🔄 自動データ更新</h2>
+    </div>
+    <span class="pagesBadge">β1.1</span>
+  </div>
+  <p class="notice">GitHub Actionsが毎晩23時ごろ（日本時間）に最新結果を確認します。普段は何もしなくてOKです。</p>
+  <div class="autoUpdateGrid">
+    <div class="stat"><b id="autoL6">-</b><span>ロト6</span></div>
+    <div class="stat"><b id="autoL7">-</b><span>ロト7</span></div>
+    <div class="stat"><b id="autoMini">-</b><span>ミニロト</span></div>
+  </div>
+  <div class="autoSource">
+    <span>更新元：PayPay銀行CSV</span>
+    <span id="autoUpdated">DB更新日：-</span>
+  </div>
+  <button id="reloadMasterBtn" class="primary" style="width:100%;margin-top:10px">最新DBを再読み込み</button>
+  <div id="autoUpdateMsg" class="notice" style="margin-top:9px"></div>
+</div>
 
 <div class="card csvAutoPanel">
   <div class="eyebrow">ONE TAP DATABASE UPDATE</div>
@@ -322,6 +351,14 @@ const autoCsvImportBtn=$('autoCsvImportBtn');
 const exportDatabaseBtn=$('exportDatabaseBtn');
 const autoCsvResult=$('autoCsvResult');
 
+const autoL6=$('autoL6');
+const autoL7=$('autoL7');
+const autoMini=$('autoMini');
+const autoUpdated=$('autoUpdated');
+const reloadMasterBtn=$('reloadMasterBtn');
+const autoUpdateMsg=$('autoUpdateMsg');
+
+
 
 
 
@@ -440,6 +477,43 @@ const enabled=id=>rules.find(r=>r.id===id)?.on;
 
 
 let sharedJsonData=null;
+
+function updateMasterStats(data){
+ if(!data)return;
+ autoL6.textContent=(data.loto6||[]).length;
+ autoL7.textContent=(data.loto7||[]).length;
+ autoMini.textContent=(data.miniloto||[]).length;
+ autoUpdated.textContent=`DB更新日：${data.updated||'-'}`;
+}
+async function reloadMasterDatabase(){
+ reloadMasterBtn.disabled=true;
+ reloadMasterBtn.textContent='確認中…';
+ autoUpdateMsg.textContent='GitHub上の最新lotodata.jsonを確認しています…';
+ try{
+  const r=await fetch(`./lotodata.json?_=${Date.now()}`,{cache:'no-store'});
+  if(!r.ok)throw new Error(`HTTP ${r.status}`);
+  const data=await r.json();
+  sharedJsonData=data;
+  updateMasterStats(data);
+  updateMasterStats(data);
+  const list=Array.isArray(data[currentGame])?data[currentGame]:[];
+  const normalized=list.map(normalizeJsonDraw).filter(validateJsonDraw).sort((a,b)=>a.round-b.round);
+  if(normalized.length){
+   saveDraws(normalized);
+   autoUpdateMsg.innerHTML=`<span class="ok">${cfg().name} ${normalized.length}件を最新版へ同期しました。</span>`;
+  }else{
+   autoUpdateMsg.textContent=`${cfg().name}のデータがありません。`;
+  }
+ }catch(err){
+  console.error(err);
+  autoUpdateMsg.innerHTML=`<span class="red">最新DBの確認に失敗しました。</span><br>${String(err.message||err)}`;
+ }finally{
+  reloadMasterBtn.disabled=false;
+  reloadMasterBtn.textContent='最新DBを再読み込み';
+ }
+}
+reloadMasterBtn?.addEventListener('click',reloadMasterDatabase);
+
 function normalizeJsonDraw(item){
  const round=Number(item.round??item.draw??item.drawNumber);
  const date=item.date||item.drawDate||'';
@@ -815,7 +889,7 @@ function showNumberCard(n){
  const reasonText=row?.reasons.length?row.reasons.join('・'):'総合バランス';
  const comment=comp.hot>=24&&comp.river>=14?`${String(n).padStart(2,'0')}は出現頻度と川の流れが同時に強い数字です。軸候補として観察価値があります。`:comp.gap>=12?`${String(n).padStart(2,'0')}は空き回数が長めです。反発候補として注目されますが、空きだけでの判断は禁物です。`:comp.pm11?`直近数字との±11関係が成立しています。ほかの条件と組み合わせて使う数字です。`:`突出した一条件ではなく、複数項目の合計で評価されています。組み合わせ全体のバランス向きです。`;
  const breakdown=[['基礎',comp.base],['ホット',comp.hot],['空き',comp.gap],['川',comp.river],['引っ張り',comp.carry],['±11',comp.pm11]];
- numberCardBody.innerHTML=`<div class="eyebrow">NUMBER PROFILE β1.0</div><div class="profileHero"><div class="profileBall">${String(n).padStart(2,'0')}</div><div><h2 class="profileTitle">数字カルテ</h2><div class="notice">${cfg().name}・${ds.length}回分で分析</div><div class="trendChips"><span class="chip">評価 <strong>${grade}</strong></span><span class="chip">スコア <strong>${row?.score||0}</strong></span><span class="chip">空き <strong>${gap}回</strong></span></div></div></div><button id="favoriteToggle" class="favBtn ${fav?'on':''}">${fav?'★ お気に入り登録済み':'☆ お気に入りに追加'}</button><div class="grid3"><div class="stat"><b>${s.freq[n]}回</b><span>期間内出現</span></div><div class="stat"><b>${hot}%</b><span>ホット度</span></div><div class="stat"><b>${river}%</b><span>川評価</span></div></div><h3>分析スコア内訳</h3><div class="breakdown">${breakdown.map(([name,val])=>`<div class="breakRow"><span>${name}</span><div class="bar"><div class="fill" style="width:${Math.min(100,val/34*100)}%"></div></div><strong>+${val}</strong></div>`).join('')}<div class="ticketHead" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><b>合計</b><span class="score">${row?.score||comp.total}点</span></div></div><h3>期間別の出現</h3><div class="periodGrid">${periods.map(x=>`<div class="periodBox"><b>${x.hits}回</b><span>${x.label} / ${x.rate.toFixed(1)}%</span></div>`).join('')}</div><div class="miniChart">${periods.map(x=>`<div class="miniChartCol"><div class="miniChartBar" style="height:${Math.max(3,x.rate/maxRate*74)}px"></div><small>${x.label}</small></div>`).join('')}</div><h3>AIコメント</h3><div class="aiNote">${comment}<br><span class="mini">評価根拠：${reasonText}</span></div><h3>一緒に出やすい数字 TOP5</h3><div class="balls">${pairTop.length?pairTop.map(([x,c])=>`<span class="ball pairBall clickable" data-num="${x}">${String(x).padStart(2,'0')}<i class="pairCount">${c}</i></span>`).join(''):'<span class="notice">データ不足</span>'}</div>`;
+ numberCardBody.innerHTML=`<div class="eyebrow">NUMBER PROFILE β1.1</div><div class="profileHero"><div class="profileBall">${String(n).padStart(2,'0')}</div><div><h2 class="profileTitle">数字カルテ</h2><div class="notice">${cfg().name}・${ds.length}回分で分析</div><div class="trendChips"><span class="chip">評価 <strong>${grade}</strong></span><span class="chip">スコア <strong>${row?.score||0}</strong></span><span class="chip">空き <strong>${gap}回</strong></span></div></div></div><button id="favoriteToggle" class="favBtn ${fav?'on':''}">${fav?'★ お気に入り登録済み':'☆ お気に入りに追加'}</button><div class="grid3"><div class="stat"><b>${s.freq[n]}回</b><span>期間内出現</span></div><div class="stat"><b>${hot}%</b><span>ホット度</span></div><div class="stat"><b>${river}%</b><span>川評価</span></div></div><h3>分析スコア内訳</h3><div class="breakdown">${breakdown.map(([name,val])=>`<div class="breakRow"><span>${name}</span><div class="bar"><div class="fill" style="width:${Math.min(100,val/34*100)}%"></div></div><strong>+${val}</strong></div>`).join('')}<div class="ticketHead" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><b>合計</b><span class="score">${row?.score||comp.total}点</span></div></div><h3>期間別の出現</h3><div class="periodGrid">${periods.map(x=>`<div class="periodBox"><b>${x.hits}回</b><span>${x.label} / ${x.rate.toFixed(1)}%</span></div>`).join('')}</div><div class="miniChart">${periods.map(x=>`<div class="miniChartCol"><div class="miniChartBar" style="height:${Math.max(3,x.rate/maxRate*74)}px"></div><small>${x.label}</small></div>`).join('')}</div><h3>AIコメント</h3><div class="aiNote">${comment}<br><span class="mini">評価根拠：${reasonText}</span></div><h3>一緒に出やすい数字 TOP5</h3><div class="balls">${pairTop.length?pairTop.map(([x,c])=>`<span class="ball pairBall clickable" data-num="${x}">${String(x).padStart(2,'0')}<i class="pairCount">${c}</i></span>`).join(''):'<span class="notice">データ不足</span>'}</div>`;
  numberModal.classList.add('showModal');$('favoriteToggle').onclick=()=>toggleFavorite(n);bindNumberClicks()
 }
 closeModal.onclick=()=>numberModal.classList.remove('showModal');numberModal.onclick=e=>{if(e.target===numberModal)numberModal.classList.remove('showModal')};analysisWindow?.addEventListener('change',()=>{renderAnalysis();renderEye()});eyeWindow?.addEventListener('change',renderEye);

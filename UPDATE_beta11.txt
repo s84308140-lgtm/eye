@@ -1,0 +1,13 @@
+ロトの目 β1.1｜自動データ更新
+
+追加:
+- GitHub Actionsによる毎日23時(JST)の自動更新
+- PayPay銀行公式CSVからロト6・ロト7・ミニロトを取得
+- 新しい回をlotodata.jsonへ自動統合
+- 手動実行(workflow_dispatch)にも対応
+- アプリの「最新DBを再読み込み」ボタン
+- DB収録件数・更新日表示
+
+初回確認:
+GitHub → Actions → Update Loto Data → Run workflow
+成功後、lotodata.jsonのupdatedと最新回が更新されます。
