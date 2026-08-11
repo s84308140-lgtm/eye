@@ -1,1 +1,169 @@
+name: Update Loto Data
 
+'on':
+  workflow_dispatch:
+  schedule:
+    # 毎日 23:00 JST（14:00 UTC）
+    - cron: "0 14 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download and merge latest lottery results
+        shell: bash
+        run: |
+          python - <<'PY'
+          import csv
+          import io
+          import json
+          import re
+          import urllib.request
+          from datetime import datetime, timezone, timedelta
+          from pathlib import Path
+
+          DB_PATH = Path("lotodata.json")
+
+          SOURCES = {
+              "loto6": {
+                  "url": "https://www.japannetbank.co.jp/lottery/co/loto6jnb.csv",
+                  "picks": 6,
+                  "bonus": 1,
+              },
+              "loto7": {
+                  "url": "https://www.japannetbank.co.jp/lottery/co/loto7jnb.csv",
+                  "picks": 7,
+                  "bonus": 2,
+              },
+              "miniloto": {
+                  "url": "https://www.japannetbank.co.jp/lottery/co/minilotojnb.csv",
+                  "picks": 5,
+                  "bonus": 1,
+              },
+              "loto5": {
+                  "url": "https://www.japannetbank.co.jp/lottery/co/loto5jnb.csv",
+                  "picks": 5,
+                  "bonus": 0,
+              },
+          }
+
+          JST = timezone(timedelta(hours=9))
+
+
+          def fetch_csv(url):
+              """URL から CSV を取得（CSV と HTML の両方を許容）。"""
+              req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+              with urllib.request.urlopen(req, timeout=30) as r:
+                  raw = r.read()
+              text = raw.decode("cp932", errors="replace")
+              return text
+
+
+          def round_key_from_date(game, d):
+              """game と開催日 (date) から round 番号を逆算。"""
+              schedule = ROUND_SCHEDULE[game]
+              for rnd, dt in schedule:
+                  if dt == d:
+                      return rnd
+              return None
+
+
+          # 既存の lotodata.json を読む
+          if DB_PATH.exists():
+              db = json.loads(DB_PATH.read_text(encoding="utf-8"))
+          else:
+              db = {}
+
+          # ラウンドスケジュール（開催日順）をここで定義
+          ROUND_SCHEDULE = {
+              "loto6": [],
+              "loto7": [],
+              "miniloto": [],
+              "loto5": [],
+          }
+
+          # --- ここで開催日 → round 番号を構築 ---
+          # round 番号が若いほど古い。最新 round は最大番号。
+          # 初回実行時に CSV を全件パースして (round, date) のリストを作る。
+          for game, meta in SOURCES.items():
+              csv_text = fetch_csv(meta["url"])
+              rdr = csv.reader(io.StringIO(csv_text))
+              rows = [row for row in rdr if row and row[0].strip()]
+              # ヘッダを飛ばす
+              if rows and rows[0][0].lower().startswith("第"):
+                  rows = rows[1:]
+
+              schedule = []
+              latest_round = 0
+              latest_date = None
+              for row in rows:
+                  # 例: 第2055回, 2024/05/06, 03 04 06 22 29 31, 10
+                  head = row[0].strip()
+                  m = re.match(r"第(\d+)回", head)
+                  if not m:
+                      continue
+                  rnd = int(m.group(1))
+                  try:
+                      d = datetime.strptime(row[1].strip(), "%Y/%m/%d").replace(tzinfo=JST)
+                  except ValueError:
+                      continue
+                  picks = re.findall(r"\d{1,2}", ",".join(row[2:2 + meta["picks"]]))
+                  bonus = re.findall(r"\d{1,2}", ",".join(row[2 + meta["picks"]:2 + meta["picks"] + meta["bonus"]]))
+                  entry = {
+                      "round": rnd,
+                      "date": d.strftime("%Y-%m-%d"),
+                      "picks": [int(x) for x in picks[:meta["picks"]]],
+                  }
+                  if meta["bonus"]:
+                      entry["bonus"] = [int(x) for x in bonus[:meta["bonus"]]]
+                  else:
+                      entry["bonus"] = []
+
+                  db.setdefault(game, []).append(entry)
+                  schedule.append((rnd, d.strftime("%Y-%m-%d")))
+                  if rnd > latest_round:
+                      latest_round = rnd
+                      latest_date = d.strftime("%Y-%m-%d")
+
+              # 重複除去（同じ round が複数あれば最新の日付を残す）
+              merged = {}
+              for e in db.get(game, []):
+                  merged[e["round"]] = e
+              db[game] = [merged[r] for r in sorted(merged.keys(), reverse=True)]
+
+              ROUND_SCHEDULE[game] = sorted(schedule, key=lambda x: x[0])
+              print(f"{game}: latest round = 第{latest_round}回 ({latest_date}), total = {len(db[game])}")
+
+          # メタ情報を保存
+          db["_meta"] = {
+              "updated_at": datetime.now(JST).isoformat(timespec="seconds"),
+              "sources": {g: SOURCES[g]["url"] for g in SOURCES},
+          }
+
+          # JSON へ書き出し
+          DB_PATH.write_text(
+              json.dumps(db, ensure_ascii=False, indent=2, sort_keys=True),
+              encoding="utf-8",
+          )
+          print(f"Wrote {DB_PATH} ({DB_PATH.stat().st_size} bytes)")
+          PY
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add lotodata.json
+          git diff --cached --quiet || git commit -m "Update loto data"
+          git push
